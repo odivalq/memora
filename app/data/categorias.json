@@ -1,0 +1,32 @@
+{
+  "categorias": [
+    {
+      "id": "cat-1",
+      "nome": "Documentação",
+      "icone": "📋",
+      "cor": "#4CAF50",
+      "descricao": "Documentos e normas internas da organização"
+    },
+    {
+      "id": "cat-2",
+      "nome": "Procedimentos",
+      "icone": "⚙️",
+      "cor": "#2196F3",
+      "descricao": "Procedimentos operacionais e fluxos de trabalho"
+    },
+    {
+      "id": "cat-3",
+      "nome": "Pessoas",
+      "icone": "👥",
+      "cor": "#9C27B0",
+      "descricao": "Informações sobre colaboradores e equipes"
+    },
+    {
+      "id": "cat-4",
+      "nome": "Tecnologia",
+      "icone": "💻",
+      "cor": "#FF9800",
+      "descricao": "Sistemas, ferramentas e suporte técnico"
+    }
+  ]
+}

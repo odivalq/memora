@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visualizar Entrada - WikiLocal</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+  <!-- Supabase Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo">
+          <div class="logo-icon">W</div>
+          <div class="logo-text">Wiki<span>Local</span></div>
+        </a>
+        
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Buscar entradas..." autocomplete="off">
+          <button type="button" id="searchBtn" title="Buscar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <a href="editar.html" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
+          Nova Entrada
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="main-content">
+    <div class="container">
+      <div class="entrada-container">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+          <div class="sidebar-titulo">Navegação</div>
+          <ul class="sidebar-menu" id="sidebarMenu">
+            <li><a href="index.html">🏠 Início</a></li>
+            <li><a href="index.html?todas=1">📄 Todas as Entradas</a></li>
+          </ul>
+          
+          <div class="sidebar-titulo" style="margin-top: 25px;">Categorias</div>
+          <ul class="sidebar-menu" id="sidebarCategorias">
+            <!-- Categorias carregadas via JS -->
+          </ul>
+        </aside>
+
+        <!-- Conteúdo da Entrada -->
+        <article class="entrada-content">
+          <div id="entradaLoading">
+            <div style="text-align: center; padding: 60px; color: var(--cor-texto-claro);">
+              <div class="loading" style="border-color: #ddd; border-top-color: var(--cor-primaria); margin: 0 auto 20px;"></div>
+              <p>Carregando entrada...</p>
+            </div>
+          </div>
+          
+          <div id="entradaContent" class="hidden">
+            <header class="entrada-header">
+              <h1 class="entrada-titulo" id="entradaTitulo"></h1>
+              <div class="entrada-meta">
+                <span class="entrada-categoria" id="entradaCategoria"></span>
+                <span class="entrada-data" id="entradaData"></span>
+                <div class="entrada-acoes">
+                  <a href="#" id="btnEditar" class="btn btn-secondary btn-sm">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Editar
+                  </a>
+                  <button id="btnExcluir" class="btn btn-danger btn-sm">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    Excluir
+                  </button>
+                </div>
+              </div>
+            </header>
+            
+            <div class="entrada-body" id="entradaBody"></div>
+          </div>
+          
+          <div id="entradaErro" class="hidden">
+            <div class="sem-resultados">
+              <div class="sem-resultados-icon">😕</div>
+              <h3>Entrada não encontrada</h3>
+              <p>A entrada que você está procurando não existe ou foi removida.</p>
+              <a href="index.html" class="btn btn-primary" style="margin-top: 20px;">
+                Voltar para o Início
+              </a>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>WikiLocal - Sua enciclopédia colaborativa.</p>
+    </div>
+  </footer>
+
+  <!-- Modal de Confirmação -->
+  <div class="modal-overlay" id="modalExcluir">
+    <div class="modal">
+      <h3 class="modal-titulo">⚠️ Confirmar Exclusão</h3>
+      <p class="modal-texto">Tem certeza que deseja excluir esta entrada? Esta ação não pode ser desfeita.</p>
+      <div class="modal-acoes">
+        <button class="btn btn-secondary" id="btnCancelarExcluir">Cancelar</button>
+        <button class="btn btn-danger" id="btnConfirmarExcluir">Sim, Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/supabase-client.js"></script>
+  <script src="js/app-supabase.js"></script>
+</body>
+</html>

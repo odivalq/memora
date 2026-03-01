@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar Entrada - WikiLocal</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+  <!-- Supabase Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo">
+          <div class="logo-icon">W</div>
+          <div class="logo-text">Wiki<span>Local</span></div>
+        </a>
+        
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Buscar entradas..." autocomplete="off">
+          <button type="button" id="searchBtn" title="Buscar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <a href="index.html" class="btn btn-secondary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"></path>
+          </svg>
+          Voltar
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="main-content">
+    <div class="container">
+      <div class="editor-container">
+        <div class="editor-header">
+          <h1 id="editorTitulo">Nova Entrada</h1>
+          <p style="color: var(--cor-texto-claro);">Preencha os campos abaixo para criar ou editar uma entrada.</p>
+        </div>
+
+        <form id="editorForm">
+          <!-- Título -->
+          <div class="form-group">
+            <label for="titulo">
+              Título <span class="required">*</span>
+            </label>
+            <input type="text" id="titulo" class="form-control" placeholder="Digite o título da entrada" required>
+            <div class="form-hint">Use um título claro e descritivo.</div>
+          </div>
+
+          <!-- Categoria -->
+          <div class="form-group">
+            <label for="categoria">
+              Categoria <span class="required">*</span>
+            </label>
+            <select id="categoria" class="form-control" required>
+              <option value="">Selecione uma categoria...</option>
+              <!-- Opções carregadas via JS -->
+            </select>
+            <div class="form-hint">Escolha a categoria mais adequada para esta entrada.</div>
+          </div>
+
+          <!-- Nova Categoria (opcional) -->
+          <div class="form-group hidden" id="novaCategoriaGroup">
+            <label for="novaCategoria">
+              Nova Categoria <span class="required">*</span>
+            </label>
+            <input type="text" id="novaCategoria" class="form-control" placeholder="Nome da nova categoria">
+            <div class="form-hint">Digite o nome da nova categoria.</div>
+          </div>
+
+          <!-- Ícone da Categoria -->
+          <div class="form-group hidden" id="iconeCategoriaGroup">
+            <label for="iconeCategoria">Ícone da Categoria</label>
+            <input type="text" id="iconeCategoria" class="form-control" placeholder="Ex: 📁, 🏢, 👤" maxlength="2">
+            <div class="form-hint">Escolha um emoji para representar a categoria (opcional).</div>
+          </div>
+
+          <!-- Cor da Categoria -->
+          <div class="form-group hidden" id="corCategoriaGroup">
+            <label for="corCategoria">Cor da Categoria</label>
+            <input type="color" id="corCategoria" class="form-control" value="#3366cc" style="height: 45px; cursor: pointer;">
+            <div class="form-hint">Escolha uma cor para a categoria.</div>
+          </div>
+
+          <!-- Conteúdo -->
+          <div class="form-group">
+            <label for="conteudo">
+              Conteúdo <span class="required">*</span>
+            </label>
+            
+            <!-- Toolbar -->
+            <div class="editor-toolbar">
+              <button type="button" data-tag="h2" title="Título H2">H2</button>
+              <button type="button" data-tag="h3" title="Título H3">H3</button>
+              <button type="button" data-tag="b" title="Negrito">B</button>
+              <button type="button" data-tag="i" title="Itálico">I</button>
+              <button type="button" data-tag="a" title="Link">🔗</button>
+              <button type="button" data-tag="ul" title="Lista">• Lista</button>
+              <button type="button" data-tag="ol" title="Lista Numerada">1. Lista</button>
+              <button type="button" data-tag="table" title="Tabela">⊞ Tabela</button>
+              <button type="button" data-tag="code" title="Código">{ }</button>
+              <button type="button" data-tag="quote" title="Citação">" Citação</button>
+              <button type="button" data-tag="info" title="Info Box">ℹ Info</button>
+              <button type="button" data-tag="warning" title="Alerta">⚠ Alerta</button>
+            </div>
+            
+            <textarea id="conteudo" class="form-control" placeholder="Digite o conteúdo da entrada..." required></textarea>
+            <div class="form-hint">
+              Use HTML simples para formatação. Clique nos botões acima para inserir tags.
+            </div>
+          </div>
+
+          <!-- Preview -->
+          <div class="form-group">
+            <label>Pré-visualização</label>
+            <div class="editor-preview">
+              <div class="editor-preview-titulo">Visualização do conteúdo</div>
+              <div id="previewContent">
+                <p style="color: #999; font-style: italic;">O preview aparecerá aqui...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ações -->
+          <div class="form-actions">
+            <button type="submit" class="btn btn-success">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              Salvar Entrada
+            </button>
+            <a href="index.html" class="btn btn-secondary">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>WikiLocal - Sua enciclopédia colaborativa.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/supabase-client.js"></script>
+  <script src="js/editor-supabase.js"></script>
+</body>
+</html>
