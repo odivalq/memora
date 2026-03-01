@@ -11,11 +11,12 @@
 const SUPABASE_URL = 'https://wuxceywvrrxpjcwqncpn.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_89C9xeXVNWVBdKjr7qT2Tw_yJlKZBOX';
 
-// Inicializa o cliente Supabase
-let supabase = null;
+// Inicializa o cliente Supabase (variável com nome diferente para evitar conflito)
+let supabaseClientInstance = null;
 
 function inicializarSupabase() {
-  if (typeof supabaseClient === 'undefined') {
+  // A biblioteca Supabase UMD expõe window.supabase
+  if (typeof window.supabase === 'undefined') {
     console.error('Biblioteca do Supabase não carregada!');
     return null;
   }
@@ -26,8 +27,8 @@ function inicializarSupabase() {
     return null;
   }
   
-  supabase = supabaseClient.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  return supabase;
+  supabaseClientInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  return supabaseClientInstance;
 }
 
 // ============================================
@@ -38,11 +39,11 @@ function inicializarSupabase() {
  * Busca todas as categorias do Supabase
  */
 async function buscarCategorias() {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return [];
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return [];
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClientInstance
       .from('categorias')
       .select('*')
       .order('nome');
@@ -59,11 +60,11 @@ async function buscarCategorias() {
  * Busca uma categoria pelo ID
  */
 async function buscarCategoriaPorId(id) {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return null;
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClientInstance
       .from('categorias')
       .select('*')
       .eq('id', id)
@@ -81,11 +82,11 @@ async function buscarCategoriaPorId(id) {
  * Cria uma nova categoria
  */
 async function criarCategoria(categoria) {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return null;
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClientInstance
       .from('categorias')
       .insert([categoria])
       .select()
@@ -103,11 +104,11 @@ async function criarCategoria(categoria) {
  * Atualiza uma categoria
  */
 async function atualizarCategoria(id, dados) {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return null;
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClientInstance
       .from('categorias')
       .update(dados)
       .eq('id', id)
@@ -126,11 +127,11 @@ async function atualizarCategoria(id, dados) {
  * Exclui uma categoria
  */
 async function excluirCategoria(id) {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return false;
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return false;
   
   try {
-    const { error } = await supabase
+    const { error } = await supabaseClientInstance
       .from('categorias')
       .delete()
       .eq('id', id);
@@ -151,11 +152,11 @@ async function excluirCategoria(id) {
  * Busca todas as entradas do Supabase
  */
 async function buscarEntradas() {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return [];
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return [];
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClientInstance
       .from('entradas')
       .select('*')
       .order('titulo');
@@ -172,11 +173,11 @@ async function buscarEntradas() {
  * Busca uma entrada pelo ID
  */
 async function buscarEntradaPorId(id) {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return null;
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClientInstance
       .from('entradas')
       .select('*')
       .eq('id', id)
@@ -194,11 +195,11 @@ async function buscarEntradaPorId(id) {
  * Busca entradas de uma categoria específica
  */
 async function buscarEntradasPorCategoria(categoriaId) {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return [];
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return [];
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClientInstance
       .from('entradas')
       .select('*')
       .eq('categoria_id', categoriaId)
@@ -216,11 +217,11 @@ async function buscarEntradasPorCategoria(categoriaId) {
  * Cria uma nova entrada
  */
 async function criarEntrada(entrada) {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return null;
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClientInstance
       .from('entradas')
       .insert([entrada])
       .select()
@@ -238,11 +239,11 @@ async function criarEntrada(entrada) {
  * Atualiza uma entrada
  */
 async function atualizarEntrada(id, dados) {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return null;
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClientInstance
       .from('entradas')
       .update(dados)
       .eq('id', id)
@@ -261,11 +262,11 @@ async function atualizarEntrada(id, dados) {
  * Exclui uma entrada
  */
 async function excluirEntrada(id) {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return false;
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return false;
   
   try {
-    const { error } = await supabase
+    const { error } = await supabaseClientInstance
       .from('entradas')
       .delete()
       .eq('id', id);
@@ -282,11 +283,11 @@ async function excluirEntrada(id) {
  * Busca entradas por termo (título ou conteúdo)
  */
 async function buscarEntradasPorTermo(termo) {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return [];
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return [];
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClientInstance
       .from('entradas')
       .select('*')
       .or(`titulo.ilike.%${termo}%,conteudo.ilike.%${termo}%`)
@@ -308,11 +309,11 @@ async function buscarEntradasPorTermo(termo) {
  * Verifica se há usuário logado
  */
 async function verificarUsuario() {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return null;
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
   
   try {
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const { data: { user }, error } = await supabaseClientInstance.auth.getUser();
     if (error) throw error;
     return user;
   } catch (erro) {
@@ -324,11 +325,11 @@ async function verificarUsuario() {
  * Faz login com email e senha
  */
 async function login(email, senha) {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return null;
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
   
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabaseClientInstance.auth.signInWithPassword({
       email: email,
       password: senha
     });
@@ -345,11 +346,11 @@ async function login(email, senha) {
  * Faz logout
  */
 async function logout() {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return false;
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return false;
   
   try {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabaseClientInstance.auth.signOut();
     if (error) throw error;
     return true;
   } catch (erro) {
@@ -367,8 +368,8 @@ async function logout() {
  * Útil para importar dados iniciais
  */
 async function migrarDadosDoJSON() {
-  if (!supabase) supabase = inicializarSupabase();
-  if (!supabase) return false;
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return false;
   
   try {
     // Carrega dados dos JSONs
@@ -402,14 +403,14 @@ async function migrarDadosDoJSON() {
     
     // Insere no Supabase
     if (categorias.length > 0) {
-      const { error: errCat } = await supabase
+      const { error: errCat } = await supabaseClientInstance
         .from('categorias')
         .upsert(categorias, { onConflict: 'id' });
       if (errCat) throw errCat;
     }
     
     if (entradas.length > 0) {
-      const { error: errEnt } = await supabase
+      const { error: errEnt } = await supabaseClientInstance
         .from('entradas')
         .upsert(entradas, { onConflict: 'id' });
       if (errEnt) throw errEnt;
