@@ -1,10 +1,11 @@
-# 📚 WikiLocal
+# 📚 Memora
 
-Uma Wikipedia local simples, leve e fácil de usar. Crie, edite e consulte informações organizadas por categorias.
+Um espaço digital seguro e modular para grupos pequenos colaborarem de forma lúdica, simples e eficiente.
+
+Este app funciona como uma wikipédia local, privada. Uma espécie de base de conhecimento interna do grupo, onde membros podem postar "entradas" de diferentes tipos (Ideia, Tarefa, Receita, Fluxo, Meta) e organizá-las por categoria.
 
 ## ✨ Características
 
-- **100% Local**: Todos os dados são armazenados no navegador (LocalStorage)
 - **Fácil de Editar**: Interface intuitiva para criar e editar entradas
 - **Busca Rápida**: Encontre informações instantaneamente
 - **Organizado por Categorias**: Mantenha tudo organizado
@@ -124,40 +125,6 @@ wikilocal/
 │   └── entradas.json   # Estrutura de exemplo (entradas)
 └── README.md           # Este arquivo
 ```
-
-## 💾 Backup e Restauração
-
-### Exportar Dados
-
-Os dados são armazenados no LocalStorage do navegador. Para fazer backup:
-
-1. Abra o console do navegador (F12 → Console)
-2. Execute:
-
-```javascript
-// Backup de categorias
-const categorias = localStorage.getItem('wikilocal_categorias');
-console.log('Categorias:', categorias);
-
-// Backup de entradas
-const entradas = localStorage.getItem('wikilocal_entradas');
-console.log('Entradas:', entradas);
-```
-
-3. Copie os valores e salve em arquivos JSON
-
-### Importar Dados
-
-Para restaurar dados de um backup:
-
-```javascript
-// Restaurar categorias
-localStorage.setItem('wikilocal_categorias', 'COLE_AQUI_O_JSON_DE_CATEGORIAS');
-
-// Restaurar entradas
-localStorage.setItem('wikilocal_entradas', 'COLE_AQUI_O_JSON_DE_ENTRADAS');
-```
-
 ## 🎨 Personalização
 
 ### Cores das Categorias
@@ -177,23 +144,6 @@ Use emojis como ícones para as categorias. Alguns exemplos:
 - 🔒 Segurança
 - 💰 Financeiro
 
-## 🔧 Solução de Problemas
-
-### Dados sumiram
-
-Os dados do LocalStorage podem ser limpos se:
-- O usuário limpar os dados de navegação
-- O navegador estiver em modo privado/anônimo
-- O espaço de armazenamento estiver cheio
-
-**Recomendação**: Faça backups regulares dos seus dados.
-
-### Aplicação não carrega
-
-- Verifique se todos os arquivos estão na mesma pasta
-- Certifique-se de abrir via `http://` ou `file:///` (não funciona em servidores restritos)
-- Use navegadores modernos (Chrome, Firefox, Edge, Safari)
-
 ## 📱 Compatibilidade
 
 - ✅ Chrome 60+
@@ -207,4 +157,4 @@ Este projeto é de código aberto. Sinta-se livre para usar, modificar e distrib
 
 ---
 
-**WikiLocal** - Sua enciclopédia local simples e eficiente! 🚀
+**Memora** - Sua enciclopédia local simples e eficiente! 🚀
