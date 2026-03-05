@@ -167,9 +167,7 @@ async function criarConta(email, senha, nickname) {
       ]);
 
     if (insertError) {
-      // Se falhar em criar o registro, deletar o usuário criado
-      await supabaseAuth.auth.admin.deleteUser(user.id);
-      throw new Error('Erro ao criar perfil do usuário');
+      throw new Error('Erro ao criar perfil do usuário: ' + insertError.message);
     }
 
     return {
