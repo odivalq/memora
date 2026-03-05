@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memora - Verificar Email</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+  <!-- Supabase Client -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body class="auth-page">
+  <!-- Container de Autenticação -->
+  <div class="auth-container">
+    <div class="auth-card">
+      <!-- Logo -->
+      <div class="auth-header">
+        <div class="logo-icon-large">M</div>
+        <h1>Verifique seu Email</h1>
+      </div>
+
+      <!-- Estado Pendente -->
+      <div id="pendingVerification" class="verification-state">
+        <div class="verification-icon pending">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <h2>Um Email foi Enviado</h2>
+        <p>Enviamos um link de confirmação para seu email. Clique no link para ativar sua conta.</p>
+        <p class="email-display" id="emailDisplay"></p>
+
+        <div class="form-message info">
+          <strong>ℹ️ Não vê o email?</strong><br>
+          Verifique sua pasta de Spam ou aguarde alguns minutos. Os emails geralmente chegam rapidamente.
+        </div>
+
+        <button id="resendBtn" class="btn btn-secondary">
+          Reenviar Email
+        </button>
+
+        <a href="login.html" class="auth-link">Voltar ao Login</a>
+
+        <div class="form-message error" id="resendError" style="display: none;"></div>
+      </div>
+
+      <!-- Estado Verificado -->
+      <div id="verificationSuccess" class="verification-state" style="display: none;">
+        <div class="verification-icon success">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <h2>Email Verificado com Sucesso!</h2>
+        <p>Sua conta foi ativada. Você pode fazer login agora.</p>
+        <a href="login.html" class="btn btn-primary">Ir para Login</a>
+      </div>
+
+      <!-- Estado Erro -->
+      <div id="verificationError" class="verification-state" style="display: none;">
+        <div class="verification-icon error">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+        </div>
+        <h2>Erro na Verificação</h2>
+        <p id="errorMessage">Houve um problema ao verificar seu email. Tente novamente.</p>
+
+        <button id="retryBtn" class="btn btn-primary">
+          Tentar Novamente
+        </button>
+
+        <a href="login.html" class="auth-link">Voltar ao Login</a>
+      </div>
+
+      <!-- Estado de Carregamento -->
+      <div id="loadingVerification" class="verification-state" style="display: none;">
+        <div class="verification-icon loading">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10"></path>
+          </svg>
+        </div>
+        <h2>Verificando seu Email...</h2>
+        <p>Por favor, aguarde um momento.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+      inicializarAuth();
+
+      let emailParam = localStorage.getItem('signupEmail') || '';
+      let tentouVerificar = false;
+
+      // Exibir email se disponível
+      if (emailParam) {
+        document.getElementById('emailDisplay').textContent = `📧 ${emailParam}`;
+      }
+
+      // Verificar se chegou um link de confirmação do Supabase
+      const hash = window.location.hash;
+      if (hash && !tentouVerificar) {
+        tentouVerificar = true;
+        await verificarLink();
+      }
+
+      async function verificarLink() {
+        document.getElementById('pendingVerification').style.display = 'none';
+        document.getElementById('loadingVerification').style.display = 'flex';
+
+        try {
+          // Checar se há uma sessão válida (significa que o email foi verificado)
+          const sessao = await obterSessaoAtual();
+
+          if (sessao && sessao.user) {
+            // Email verificado com sucesso
+            mostrarSucesso();
+          } else {
+            // Possível erro, mas vamos verificar novamente
+            setTimeout(() => {
+              obterSessaoAtual().then(sess => {
+                if (sess && sess.user) {
+                  mostrarSucesso();
+                } else {
+                  mostrarErro('O link de confirmação pode ter expirado ou ser inválido.');
+                }
+              });
+            }, 1000);
+          }
+        } catch (error) {
+          console.error('Erro ao verificar:', error);
+          mostrarErro('Erro ao verificar o email. Tente novamente.');
+        }
+      }
+
+      function mostrarSucesso() {
+        document.getElementById('loadingVerification').style.display = 'none';
+        document.getElementById('pendingVerification').style.display = 'none';
+        document.getElementById('verificationSuccess').style.display = 'flex';
+
+        // Limpar email do localStorage
+        localStorage.removeItem('signupEmail');
+
+        // Redirecionar ao login após 3 segundos
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 3000);
+      }
+
+      function mostrarErro(mensagem) {
+        document.getElementById('loadingVerification').style.display = 'none';
+        document.getElementById('pendingVerification').style.display = 'none';
+        document.getElementById('verificationError').style.display = 'flex';
+        document.getElementById('errorMessage').textContent = mensagem;
+      }
+
+      // Botão de reenviar email
+      document.getElementById('resendBtn').addEventListener('click', async function () {
+        if (!emailParam) {
+          mostrarErro('Email não encontrado. Volte ao cadastro.');
+          return;
+        }
+
+        this.disabled = true;
+        this.textContent = 'Reenviando...';
+
+        try {
+          // Reenviar email de confirmação
+          if (supabaseAuth) {
+            await supabaseAuth.auth.resend({
+              type: 'signup',
+              email: emailParam
+            });
+
+            document.getElementById('resendError').style.display = 'none';
+            this.textContent = '✅ Email reenviado!';
+            this.disabled = true;
+
+            setTimeout(() => {
+              this.textContent = 'Reenviar Email';
+              this.disabled = false;
+            }, 5000);
+          }
+        } catch (error) {
+          document.getElementById('resendError').textContent = '❌ Erro ao reenviar: ' + error.message;
+          document.getElementById('resendError').style.display = 'block';
+
+          this.textContent = 'Reenviar Email';
+          this.disabled = false;
+        }
+      });
+
+      // Botão de Tentar Novamente
+      document.getElementById('retryBtn').addEventListener('click', function () {
+        window.location.reload();
+      });
+
+      // Se o usuário chegou aqui via callback do Supabase, processar
+      if (hash && hash.includes('access_token')) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    });
+  </script>
+</body>
+</html>

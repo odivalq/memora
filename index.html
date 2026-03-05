@@ -28,13 +28,40 @@
             </svg>
           </button>
         </div>
-        
-        <a href="editar.html" class="btn btn-primary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 5v14M5 12h14"></path>
-          </svg>
-          Nova Entrada
-        </a>
+
+        <div class="header-actions">
+          <a href="editar.html" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"></path>
+            </svg>
+            Nova Entrada
+          </a>
+
+          <!-- Menu de Usuário -->
+          <div class="user-menu">
+            <button class="user-menu-btn" id="userMenuBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <span id="userMenuLabel">Menu</span>
+            </button>
+            <div class="user-menu-dropdown" id="userMenuDropdown">
+              <div class="user-info" id="userInfo">
+                <div class="user-name" id="userName"></div>
+                <div class="user-email" id="userEmail"></div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="logoutBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                Sair
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -85,6 +112,69 @@
 
   <!-- Scripts -->
   <script src="js/supabase-client.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/app-supabase.js"></script>
+  <script>
+    // Inicialização de Autenticação
+    document.addEventListener('DOMContentLoaded', async function () {
+      // Verificar se o usuário está autenticado
+      const usuario = await verificarAutenticacao();
+      
+      if (!usuario) {
+        return; // Será redirecionado em verificarAutenticacao
+      }
+
+      // Carregar informações do usuário
+      const dadosUsuario = await obterDadosUsuario(usuario.id);
+      
+      // Atualizar interface com informações do usuário
+      const userName = document.getElementById('userName');
+      const userEmail = document.getElementById('userEmail');
+      const userMenuLabel = document.getElementById('userMenuLabel');
+
+      if (userName && dadosUsuario) {
+        userName.textContent = dadosUsuario.nickname || usuario.email;
+        userMenuLabel.textContent = '👤 ' + (dadosUsuario.nickname || usuario.email.split('@')[0]);
+      }
+
+      if (userEmail) {
+        userEmail.textContent = usuario.email;
+      }
+
+      // Configurar logout
+      const logoutBtn = document.getElementById('logoutBtn');
+      const userMenuBtn = document.getElementById('userMenuBtn');
+      const userMenuDropdown = document.getElementById('userMenuDropdown');
+
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async function (e) {
+          e.preventDefault();
+          
+          try {
+            await fazerLogout();
+            window.location.href = 'login.html';
+          } catch (error) {
+            alert('Erro ao fazer logout: ' + error.message);
+          }
+        });
+      }
+
+      // Toggle do menu de usuário
+      if (userMenuBtn) {
+        userMenuBtn.addEventListener('click', function () {
+          if (userMenuDropdown) {
+            userMenuDropdown.classList.toggle('active');
+          }
+        });
+      }
+
+      // Fechar menu ao clicar fora
+      document.addEventListener('click', function (e) {
+        if (userMenuDropdown && !userMenuDropdown.contains(e.target) && !userMenuBtn.contains(e.target)) {
+          userMenuDropdown.classList.remove('active');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
