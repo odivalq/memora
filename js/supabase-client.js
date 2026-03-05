@@ -9,7 +9,7 @@
 
 // SUBSTITUA ESTES VALORES COM OS SEUS DO SUPABASE
 const SUPABASE_URL = 'https://wuxceywvrrxpjcwqncpn.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1eGNleXd2cnJ4cGpjd3FuY3BuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzMzY1MDcsImV4cCI6MjA4NzkxMjUwN30.1PMMly3ZDSNKtmsWqPuxEyUmtIc5MXGyy2VqG4hA09Q';
+const SUPABASE_ANON_KEY = 'sb_publishable_89C9xeXVNWVBdKjr7qT2Tw_yJlKZBOX';
 
 // Inicializa o cliente Supabase (variável com nome diferente para evitar conflito)
 let supabaseClientInstance = null;
