@@ -146,12 +146,17 @@ async function criarConta(email, senha, nickname) {
       if (signupError.message.includes('User already registered')) {
         throw new Error('Este email já está registrado');
       }
+      console.error('signUp erro', signupError);
       throw new Error(signupError.message);
     }
 
     if (!user) {
+      console.warn('signUp retornou sem user, dados completos:', { user, signupError });
       throw new Error('Erro ao criar usuário');
     }
+
+    // armazenar email para exibí‑lo na página de verificação
+    localStorage.setItem('signupEmail', email);
 
     // 2. Não é mais necessário criar manualmente o registro em `users`.
     //    um trigger no banco (on_auth_user_created) já faz isso automaticamente.

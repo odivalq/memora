@@ -36,9 +36,14 @@ Além disso, já foi removido o campo `created_at` (que deve ser gerenciado pelo
 1. Vá para seu painel do **Supabase** → **SQL Editor**
 2. Clique em **"New query"**
 3. Copie todo o conteúdo do arquivo [CORRECAO-AUTH.sql](../CORRECAO-AUTH.sql)
+   (ele agora insere também um `nickname` padrão no trigger para não violar
+   o `NOT NULL`).
 4. Cole no SQL Editor
 5. Clique em **"Run"** ou pressione **Ctrl+Enter**
 6. Aguarde: "Success. No rows returned"
+
+> Se você já havia executado esse arquivo antes, execute novamente para
+> atualizar a função/trigger com o campo de nickname.
 
 **O que esse SQL faz:**
 - ✅ Cria um **TRIGGER automático** que cria a linha em `users` quando um novo usuário é criado

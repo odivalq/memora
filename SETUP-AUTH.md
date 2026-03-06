@@ -72,7 +72,7 @@ O Supabase Auth cria automaticamente a tabela `auth.users`. Mas precisamos de um
 CREATE TABLE users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT UNIQUE NOT NULL,
-  nickname TEXT NOT NULL UNIQUE,
+  nickname TEXT NOT NULL UNIQUE,  -- preenchido automaticamente pelo trigger
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   email_verified BOOLEAN DEFAULT FALSE

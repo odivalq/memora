@@ -19,8 +19,11 @@ DROP POLICY IF EXISTS "Enable insert for signup" ON users;
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.users (id, email, email_verified)
-  VALUES (new.id, new.email, false);
+  -- nickname é NOT NULL na tabela, então precisamos inserir algum valor
+  -- padrão para que a inserção não falhe. usamos o email como placeholder;
+  -- o usuário poderá atualizar depois via front-end.
+  INSERT INTO public.users (id, email, email_verified, nickname)
+  VALUES (new.id, new.email, false, new.email);
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
