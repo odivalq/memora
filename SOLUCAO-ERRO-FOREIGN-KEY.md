@@ -27,7 +27,9 @@ A tabela `users` tem uma chave estrangeira que referencia `auth.users(id)`. Quan
 
 ### PASSO 1: Atualizar o código JavaScript ✅ PRONTO
 
-Já atualizamos [js/auth.js](../js/auth.js) para remover o campo `created_at` (que deve ser gerenciado pelo banco).
+Atualize `js/auth.js` para **remover a inserção manual** na tabela `users`. o arquivo agora contém apenas comentários explicando
+o comportamento do trigger; a criação do perfil acontece automaticamente.
+Além disso, já foi removido o campo `created_at` (que deve ser gerenciado pelo banco).
 
 ### PASSO 2: Executar SQL no Supabase (FAÇA AGORA)
 
@@ -41,7 +43,7 @@ Já atualizamos [js/auth.js](../js/auth.js) para remover o campo `created_at` (q
 **O que esse SQL faz:**
 - ✅ Cria um **TRIGGER automático** que cria a linha em `users` quando um novo usuário é criado
 - ✅ Reconfiguração das políticas de RLS corretamente
-- ✅ Remove a necessidade de INSERT manual
+— ✅ Remove a necessidade de INSERT manual (o trigger cuida disso)
 
 ### PASSO 3: Testar 🧪
 

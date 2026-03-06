@@ -153,21 +153,17 @@ async function criarConta(email, senha, nickname) {
       throw new Error('Erro ao criar usuário');
     }
 
-    // 2. Criar registro adicional na tabela users
-    const { error: insertError } = await supabaseAuth
-      .from('users')
-      .insert([
-        {
-          id: user.id,
-          email: email,
-          nickname: nickname,
-          email_verified: false
-        }
-      ]);
+    // 2. Não é mais necessário criar manualmente o registro em `users`.
+    //    um trigger no banco (on_auth_user_created) já faz isso automaticamente.
+    //    Se desejar guardar o nickname ou outros campos, use um UPDATE
+    //    separado após a confirmação de e‑mail ou no primeiro login.
 
-    if (insertError) {
-      throw new Error('Erro ao criar perfil do usuário: ' + insertError.message);
-    }
+    // Exemplo de atualização opcional (comentado):
+    // await supabaseAuth
+    //   .from('users')
+    //   .update({ nickname })
+    //   .eq('id', user.id);
+
 
     return {
       success: true,
