@@ -123,21 +123,31 @@ CREATE POLICY "Enable insert for signup" ON users
 ### 3.2 Atualizar o arquivo `js/supabase-client.js`
 
 1. Abra o arquivo `js/supabase-client.js` no seu projeto
-2. Encontre estas linhas:
+2. Encontre estas linhas (ou similares):
 
 ```javascript
-const SUPABASE_URL = 'https://wuxceywvrrxpjcwqncpn.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_89C9xeXVNWVBdKjr7qT2Tw_yJlKZBOX';
+// variáveis que o restante do app espera encontrar globalmente
+window.SUPABASE_URL = 'https://wuxceywvrrxpjcwqncpn.supabase.co';
+window.SUPABASE_ANON_KEY = 'sb_publishable_89C9xeXVNWVBdKjr7qT2Tw_yJlKZBOX';
+
+// (o arquivo também declara `const SUPABASE_URL`/`ANON_KEY` localmente)
 ```
 
-3. **SUBSTITUA** pelos seus valores reais do Supabase:
+> ⚠️ **Importante:** em um `<script>` normal, declarar `const` ou `let`
+> não copia a variável para `window`; por isso utilizamos `window.SUPABASE_URL`
+> para torná‑la disponível aos demais scripts (`auth.js`, páginas de verificação
+> etc.). Se você esquecer essa etapa, verá o aviso "Configure suas credenciais
+> do Supabase" no console e nada funcionará.
+
+3. **SUBSTITUA** os valores pelos seus próprios:
 
 ```javascript
-const SUPABASE_URL = 'https://seu-projeto.supabase.co';
-const SUPABASE_ANON_KEY = 'sua-chave-publica-aqui';
+window.SUPABASE_URL = 'https://seu-projeto.supabase.co';
+window.SUPABASE_ANON_KEY = 'sua-chave-publica-aqui';
 ```
 
 4. Salve o arquivo
+
 
 ---
 

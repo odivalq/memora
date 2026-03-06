@@ -130,14 +130,17 @@ Abra o arquivo `js/supabase-client.js` no seu editor de código.
 Encontre estas linhas no início do arquivo:
 
 ```javascript
-const SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
-const SUPABASE_ANON_KEY = 'sua-chave-anon-publica-aqui';
+// As variáveis precisam ser globais para que outros scripts (como auth.js)
+// possam acessá-las. Usamos `window.` para garantir isso.
+window.SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
+window.SUPABASE_ANON_KEY = 'sua-chave-anon-publica-aqui';
+// o arquivo também pode declarar `const` locais baseados em `window.`
 ```
 
 Substitua pelos valores que você copiou no Passo 3:
 
 ```javascript
-const SUPABASE_URL = 'https://xxxxxxxxxxxxxxxxxxxx.supabase.co';
+window.SUPABASE_URL = 'https://xxxxxxxxxxxxxxxxxxxx.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIs...';
 ```
 

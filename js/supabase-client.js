@@ -8,8 +8,18 @@
 // ============================================
 
 // SUBSTITUA ESTES VALORES COM OS SEUS DO SUPABASE
-const SUPABASE_URL = 'https://wuxceywvrrxpjcwqncpn.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_89C9xeXVNWVBdKjr7qT2Tw_yJlKZBOX';
+// Atenção: as variáveis precisam ficar acessíveis a outros scripts
+// (auth.js asume que SUPABASE_URL e SUPABASE_ANON_KEY estão no escopo global).
+// `const`/`let` não exportam nada para `window` em um <script> normal, portanto
+// atribuímos também a `window` ou usamos `var`.
+
+// exemplo usando `window.` para garantir disponibilidade global:
+window.SUPABASE_URL = 'https://wuxceywvrrxpjcwqncpn.supabase.co';
+window.SUPABASE_ANON_KEY = 'sb_publishable_89C9xeXVNWVBdKjr7qT2Tw_yJlKZBOX';
+
+// também criamos constantes locais para não modificar o restante do código abaixo
+const SUPABASE_URL = window.SUPABASE_URL;
+const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
 
 // Inicializa o cliente Supabase (variável com nome diferente para evitar conflito)
 let supabaseClientInstance = null;

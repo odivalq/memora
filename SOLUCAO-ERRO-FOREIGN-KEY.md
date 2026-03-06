@@ -69,6 +69,18 @@ Além disso, já foi removido o campo `created_at` (que deve ser gerenciado pelo
    - Vá em **Console**
    - Veja a mensagem de erro exata
 
+2. **Confirme que as credenciais estão realmente disponíveis:**
+   - O arquivo `js/supabase-client.js` deve ser carregado **antes** de qualquer
+     outro script que use `SUPABASE_URL`/`SUPABASE_ANON_KEY` (por exemplo,
+     `auth.js`).
+   - No próprio `supabase-client.js` as variáveis são expostas como
+     `window.SUPABASE_URL` e `window.SUPABASE_ANON_KEY`; se você usar `const`
+     sem anexá‑las ao `window`, o escopo será privado e outras páginas verão
+     `undefined` (e o console mostrará "Configure suas credenciais do Supabase").
+   - Isso era a causa do problema de "nenhum email chega" e tabela vazia: os
+     cadastros nunca eram enviados porque `supabaseAuth` não podia ser
+     inicializado.
+
 2. **Verificar trigger no Supabase:**
    - Vá em **SQL Editor** → **New query**
    - Digite e execute:
