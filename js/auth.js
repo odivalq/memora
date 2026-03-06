@@ -161,7 +161,6 @@ async function criarConta(email, senha, nickname) {
           id: user.id,
           email: email,
           nickname: nickname,
-          created_at: new Date().toISOString(),
           email_verified: false
         }
       ]);
