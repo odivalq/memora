@@ -112,52 +112,64 @@ async function renderizarCategorias() {
   const grid = document.getElementById('categoriasGrid');
   if (!grid) return;
 
-  // Mostra loading
-  grid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--cor-texto-claro);"><div class="loading" style="margin: 0 auto 20px;"></div>Carregando categorias...</div>';
+  try {
+    // Mostra loading
+    grid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--cor-texto-claro);"><div class="loading" style="margin: 0 auto 20px;"></div>Carregando categorias...</div>';
 
-  const categorias = await carregarCategorias();
-  const entradas = await carregarEntradas();
+    const categorias = await carregarCategorias();
+    const entradas = await carregarEntradas();
 
-  if (categorias.length === 0) {
+    if (categorias.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+          <div style="font-size: 3rem; margin-bottom: 15px;">📂</div>
+          <h3>Nenhuma categoria encontrada</h3>
+          <p style="color: var(--cor-texto-claro);">Crie sua primeira categoria ao adicionar uma entrada.</p>
+          <a href="editar.html" class="btn btn-primary" style="margin-top: 20px;">Nova Entrada</a>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = categorias.map(cat => {
+      const entradasCat = entradas.filter(e => e.categoria_id === cat.id);
+      const entradasHtml = entradasCat.slice(0, 5).map(e => `
+        <li><a href="entrada.html?id=${e.id}">${e.titulo}</a></li>
+      `).join('');
+      
+      const maisEntradas = entradasCat.length > 5 
+        ? `<li style="color: var(--cor-texto-claro); font-size: 0.85rem; padding: 6px 0;">+ ${entradasCat.length - 5} mais...</li>` 
+        : '';
+
+      return `
+        <div class="categoria-card">
+          <div class="categoria-header">
+            <div class="categoria-icon" style="background: ${cat.cor}20; color: ${cat.cor};">
+              ${cat.icone || CONFIG.defaultIcon}
+            </div>
+            <div>
+              <div class="categoria-titulo">${cat.nome}</div>
+              <div class="categoria-contador">${entradasCat.length} entrada(s)</div>
+            </div>
+          </div>
+          <ul class="entradas-lista">
+            ${entradasHtml}
+            ${maisEntradas}
+          </ul>
+        </div>
+      `;
+    }).join('');
+  } catch (error) {
+    console.error('Erro ao renderizar categorias:', error);
     grid.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-        <div style="font-size: 3rem; margin-bottom: 15px;">📂</div>
-        <h3>Nenhuma categoria encontrada</h3>
-        <p style="color: var(--cor-texto-claro);">Crie sua primeira categoria ao adicionar uma entrada.</p>
-        <a href="editar.html" class="btn btn-primary" style="margin-top: 20px;">Nova Entrada</a>
+        <div style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
+        <h3>Erro ao carregar categorias</h3>
+        <p style="color: var(--cor-texto-claro);">Ocorreu um erro ao buscar as categorias. Tente recarregar a página.</p>
+        <button onclick="location.reload()" class="btn btn-primary" style="margin-top: 20px;">Recarregar</button>
       </div>
     `;
-    return;
   }
-
-  grid.innerHTML = categorias.map(cat => {
-    const entradasCat = entradas.filter(e => e.categoria_id === cat.id);
-    const entradasHtml = entradasCat.slice(0, 5).map(e => `
-      <li><a href="entrada.html?id=${e.id}">${e.titulo}</a></li>
-    `).join('');
-    
-    const maisEntradas = entradasCat.length > 5 
-      ? `<li style="color: var(--cor-texto-claro); font-size: 0.85rem; padding: 6px 0;">+ ${entradasCat.length - 5} mais...</li>` 
-      : '';
-
-    return `
-      <div class="categoria-card">
-        <div class="categoria-header">
-          <div class="categoria-icon" style="background: ${cat.cor}20; color: ${cat.cor};">
-            ${cat.icone || CONFIG.defaultIcon}
-          </div>
-          <div>
-            <div class="categoria-titulo">${cat.nome}</div>
-            <div class="categoria-contador">${entradasCat.length} entrada(s)</div>
-          </div>
-        </div>
-        <ul class="entradas-lista">
-          ${entradasHtml}
-          ${maisEntradas}
-        </ul>
-      </div>
-    `;
-  }).join('');
 }
 
 /**

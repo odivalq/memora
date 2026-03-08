@@ -11,6 +11,19 @@ let supabaseAuth = null;
 let authState = { user: null, initialized: false };
 
 /**
+ * Retorna a instância Supabase compartilhada
+ */
+function obterSupabaseCompartilhado() {
+  // Tenta usar a instância de supabase-client.js
+  if (typeof supabaseClientInstance !== 'undefined' && supabaseClientInstance) {
+    return supabaseClientInstance;
+  }
+  
+  // Caso contrário, cria uma nova instância
+  return inicializarAuth();
+}
+
+/**
  * Inicializa o cliente Supabase Auth
  */
 function inicializarAuth() {
@@ -26,21 +39,35 @@ function inicializarAuth() {
   }
 
   supabaseAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  configurarAuthStateListener();
+
+  return supabaseAuth;
+}
+
+/**
+ * Configura o listener de mudança de estado de autenticação
+ */
+function configurarAuthStateListener() {
+  const client = supabaseAuth || obterSupabaseCompartilhado();
+  
+  if (!client) return;
 
   // Obter sessão inicial
-  supabaseAuth.auth.getSession().then(({ data: { session } }) => {
+  client.auth.getSession().then(({ data: { session }, error }) => {
+    if (error) {
+      console.error('Erro ao obter sessão inicial:', error);
+    }
     authState.user = session?.user || null;
     authState.initialized = true;
+    console.log('Sessão inicial:', authState.user ? 'usuário logado' : 'sem usuário');
   });
 
   // Configurar listener de estado de autenticação
-  supabaseAuth.auth.onAuthStateChange((event, session) => {
+  client.auth.onAuthStateChange((event, session) => {
     authState.user = session?.user || null;
     authState.initialized = true;
     console.log('Auth state changed:', event, authState.user ? 'logged in' : 'logged out');
   });
-
-  return supabaseAuth;
 }
 
 // ============================================
@@ -51,11 +78,14 @@ function inicializarAuth() {
  * Obtém a sessão atual do usuário
  */
 async function obterSessaoAtual() {
-  if (!supabaseAuth) inicializarAuth();
-  if (!supabaseAuth) return null;
+  const client = obterSupabaseCompartilhado();
+  if (!client) return null;
 
   try {
-    const { data: { session }, error } = await supabaseAuth.auth.getSession();
+    const { data: { session }, error } = await client.auth.getSession();
+    if (error) {
+      console.error('Erro ao obter sessão:', error);
+    }
     return session;
   } catch (error) {
     console.error('Erro ao obter sessão:', error);
@@ -112,11 +142,11 @@ async function verificarAutenticacao() {
  * Obtém os dados adicionais do usuário da tabela users
  */
 async function obterDadosUsuario(userId) {
-  if (!supabaseAuth) inicializarAuth();
-  if (!supabaseAuth) return null;
+  const client = obterSupabaseCompartilhado();
+  if (!client) return null;
 
   try {
-    const { data, error } = await supabaseAuth
+    const { data, error } = await client
       .from('users')
       .select('*')
       .eq('id', userId)
@@ -142,8 +172,8 @@ async function obterDadosUsuario(userId) {
  * Cria uma nova conta de usuário
  */
 async function criarConta(email, senha, nickname) {
-  if (!supabaseAuth) inicializarAuth();
-  if (!supabaseAuth) throw new Error('Supabase não inicializado');
+  const client = obterSupabaseCompartilhado();
+  if (!client) throw new Error('Supabase não inicializado');
 
   // Validações
   if (!email || !email.includes('@')) {
@@ -160,7 +190,7 @@ async function criarConta(email, senha, nickname) {
 
   try {
     // 1. Criar usuário no Supabase Auth
-    const { data: { user }, error: signupError } = await supabaseAuth.auth.signUp({
+    const { data: { user }, error: signupError } = await client.auth.signUp({
       email: email,
       password: senha,
       options: {
@@ -215,8 +245,8 @@ async function criarConta(email, senha, nickname) {
  * Faz login com email e senha
  */
 async function fazerLogin(email, senha) {
-  if (!supabaseAuth) inicializarAuth();
-  if (!supabaseAuth) throw new Error('Supabase não inicializado');
+  const client = obterSupabaseCompartilhado();
+  if (!client) throw new Error('Supabase não inicializado');
 
   if (!email || !email.includes('@')) {
     throw new Error('Email inválido');
@@ -227,7 +257,7 @@ async function fazerLogin(email, senha) {
   }
 
   try {
-    const { data, error } = await supabaseAuth.auth.signInWithPassword({
+    const { data, error } = await client.auth.signInWithPassword({
       email: email,
       password: senha
     });
@@ -261,11 +291,11 @@ async function fazerLogin(email, senha) {
  * Faz logout do usuário atual
  */
 async function fazerLogout() {
-  if (!supabaseAuth) inicializarAuth();
-  if (!supabaseAuth) throw new Error('Supabase não inicializado');
+  const client = obterSupabaseCompartilhado();
+  if (!client) throw new Error('Supabase não inicializado');
 
   try {
-    const { error } = await supabaseAuth.auth.signOut();
+    const { error } = await client.auth.signOut();
 
     if (error) {
       throw new Error(error.message);
@@ -292,15 +322,15 @@ async function fazerLogout() {
  * Envia email de reset de senha
  */
 async function enviarEmailResetSenha(email) {
-  if (!supabaseAuth) inicializarAuth();
-  if (!supabaseAuth) throw new Error('Supabase não inicializado');
+  const client = obterSupabaseCompartilhado();
+  if (!client) throw new Error('Supabase não inicializado');
 
   if (!email || !email.includes('@')) {
     throw new Error('Email inválido');
   }
 
   try {
-    const { error } = await supabaseAuth.auth.resetPasswordForEmail(email, {
+    const { error } = await client.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/password-reset.html?type=recovery`
     });
 
@@ -321,15 +351,15 @@ async function enviarEmailResetSenha(email) {
  * Atualiza a senha do usuário
  */
 async function atualizarSenha(novaSenha) {
-  if (!supabaseAuth) inicializarAuth();
-  if (!supabaseAuth) throw new Error('Supabase não inicializado');
+  const client = obterSupabaseCompartilhado();
+  if (!client) throw new Error('Supabase não inicializado');
 
   if (!novaSenha || novaSenha.length < 8) {
     throw new Error('Senha deve ter no mínimo 8 caracteres');
   }
 
   try {
-    const { error } = await supabaseAuth.auth.updateUser({
+    const { error } = await client.auth.updateUser({
       password: novaSenha
     });
 
@@ -685,3 +715,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 });
+
+// ============================================
+// INICIALIZAÇÃO DO ESTADO DE AUTENTICAÇÃO
+// ============================================
+
+// Configurar listener de auth state quando o cliente estiver pronto
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    configurarAuthStateListener();
+  });
+} else {
+  configurarAuthStateListener();
+}

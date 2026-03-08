@@ -24,7 +24,30 @@ const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
 // Inicializa o cliente Supabase (variável com nome diferente para evitar conflito)
 let supabaseClientInstance = null;
 
+// Criar cliente Supabase IMEDIATAMENTE (não renderizado)
+(function initSupabaseEarly() {
+  // A biblioteca Supabase UMD expõe window.supabase
+  if (typeof window.supabase === 'undefined') {
+    console.warn('Supabase biblioteca ainda não carregada');
+    return;
+  }
+  
+  // Verifica se as credenciais foram configuradas
+  if (SUPABASE_URL.includes('SEU-PROJETO') || SUPABASE_ANON_KEY.includes('sua-chave')) {
+    console.warn('⚠️ Configure suas credenciais do Supabase no arquivo js/supabase-client.js');
+    return;
+  }
+  
+  supabaseClientInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  console.log('Supabase client inicializado com sucesso');
+})();
+
 function inicializarSupabase() {
+  // Se já foi inicializado, apenas retorna
+  if (supabaseClientInstance) {
+    return supabaseClientInstance;
+  }
+  
   // A biblioteca Supabase UMD expõe window.supabase
   if (typeof window.supabase === 'undefined') {
     console.error('Biblioteca do Supabase não carregada!');
