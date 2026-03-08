@@ -69,19 +69,56 @@ function inicializarSupabase() {
 // ============================================
 
 /**
+ * Obtém o ID do usuário atualmente autenticado
+ */
+async function obterUsuarioIdAtual() {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
+  
+  try {
+    const { data: { user }, error } = await supabaseClientInstance.auth.getUser();
+    if (error) {
+      console.error('Erro ao obter usuário:', error);
+      return null;
+    }
+    return user?.id || null;
+  } catch (error) {
+    console.error('Erro ao obter ID do usuário:', error);
+    return null;
+  }
+}
+
+/**
  * Busca todas as categorias do Supabase
  */
 async function buscarCategorias() {
   if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
-  if (!supabaseClientInstance) return [];
+  if (!supabaseClientInstance) {
+    console.error('Cliente Supabase não disponível');
+    return [];
+  }
   
   try {
+    // Debug: verificar se o usuário está autenticado
+    const { data: { user } } = await supabaseClientInstance.auth.getUser();
+    console.log('Usuário na busca de categorias:', user ? user.email : 'não autenticado');
+    
     const { data, error } = await supabaseClientInstance
       .from('categorias')
       .select('*')
       .order('nome');
     
-    if (error) throw error;
+    if (error) {
+      console.error('Erro Supabase ao buscar categorias:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
+      throw error;
+    }
+    
+    console.log('Categorias carregadas com sucesso:', data?.length || 0, 'itens');
     return data || [];
   } catch (erro) {
     console.error('Erro ao buscar categorias:', erro);
@@ -119,13 +156,26 @@ async function criarCategoria(categoria) {
   if (!supabaseClientInstance) return null;
   
   try {
+    // Obter ID do usuário logado
+    const userId = await obterUsuarioIdAtual();
+    if (!userId) {
+      throw new Error('Usuário não autenticado');
+    }
+    
+    // Adicionar user_id ao objeto categoria
+    const categoriaComUser = {
+      ...categoria,
+      user_id: userId
+    };
+    
     const { data, error } = await supabaseClientInstance
       .from('categorias')
-      .insert([categoria])
+      .insert([categoriaComUser])
       .select()
       .single();
     
     if (error) throw error;
+    console.log('Categoria criada com sucesso:', data);
     return data;
   } catch (erro) {
     console.error('Erro ao criar categoria:', erro);
@@ -186,7 +236,10 @@ async function excluirCategoria(id) {
  */
 async function buscarEntradas() {
   if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
-  if (!supabaseClientInstance) return [];
+  if (!supabaseClientInstance) {
+    console.error('Cliente Supabase não disponível');
+    return [];
+  }
   
   try {
     const { data, error } = await supabaseClientInstance
@@ -194,7 +247,16 @@ async function buscarEntradas() {
       .select('*')
       .order('titulo');
     
-    if (error) throw error;
+    if (error) {
+      console.error('Erro Supabase ao buscar entradas:', {
+        message: error.message,
+        code: error.code,
+        details: error.details
+      });
+      throw error;
+    }
+    
+    console.log('Entradas carregadas com sucesso:', data?.length || 0, 'itens');
     return data || [];
   } catch (erro) {
     console.error('Erro ao buscar entradas:', erro);
@@ -254,13 +316,26 @@ async function criarEntrada(entrada) {
   if (!supabaseClientInstance) return null;
   
   try {
+    // Obter ID do usuário logado
+    const userId = await obterUsuarioIdAtual();
+    if (!userId) {
+      throw new Error('Usuário não autenticado');
+    }
+    
+    // Adicionar user_id ao objeto entrada
+    const entradaComUser = {
+      ...entrada,
+      user_id: userId
+    };
+    
     const { data, error } = await supabaseClientInstance
       .from('entradas')
-      .insert([entrada])
+      .insert([entradaComUser])
       .select()
       .single();
     
     if (error) throw error;
+    console.log('Entrada criada com sucesso:', data);
     return data;
   } catch (erro) {
     console.error('Erro ao criar entrada:', erro);
