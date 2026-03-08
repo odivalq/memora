@@ -8,6 +8,7 @@
 // ============================================
 
 let supabaseAuth = null;
+let authState = { user: null, initialized: false };
 
 /**
  * Inicializa o cliente Supabase Auth
@@ -25,6 +26,20 @@ function inicializarAuth() {
   }
 
   supabaseAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Obter sessão inicial
+  supabaseAuth.auth.getSession().then(({ data: { session } }) => {
+    authState.user = session?.user || null;
+    authState.initialized = true;
+  });
+
+  // Configurar listener de estado de autenticação
+  supabaseAuth.auth.onAuthStateChange((event, session) => {
+    authState.user = session?.user || null;
+    authState.initialized = true;
+    console.log('Auth state changed:', event, authState.user ? 'logged in' : 'logged out');
+  });
+
   return supabaseAuth;
 }
 
@@ -55,13 +70,25 @@ async function obterUsuarioAtual() {
   if (!supabaseAuth) inicializarAuth();
   if (!supabaseAuth) return null;
 
-  try {
-    const { data: { user }, error } = await supabaseAuth.auth.getUser();
-    return user;
-  } catch (error) {
-    console.error('Erro ao obter usuário:', error);
-    return null;
+  // Se o estado já foi inicializado, retornar o usuário
+  if (authState.initialized) {
+    return authState.user;
   }
+
+  // Caso contrário, aguardar a inicialização com timeout
+  return new Promise((resolve) => {
+    let attempts = 0;
+    const maxAttempts = 100; // 5 segundos
+    const checkAuth = () => {
+      if (authState.initialized || attempts >= maxAttempts) {
+        resolve(authState.user);
+      } else {
+        attempts++;
+        setTimeout(checkAuth, 50);
+      }
+    };
+    checkAuth();
+  });
 }
 
 /**
