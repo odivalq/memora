@@ -511,12 +511,16 @@ document.addEventListener('DOMContentLoaded', function () {
   // Inicializar Supabase
   inicializarAuth();
 
-  // Verificar se já está autenticado (redirecionar para index.html)
-  obterUsuarioAtual().then(user => {
-    if (user) {
-      window.location.href = 'index.html';
-    }
-  });
+  const pagina = window.location.pathname.split('/').pop();
+
+  // só redireciona se estivermos na página de login
+  if (pagina === 'login.html') {
+    obterUsuarioAtual().then(user => {
+      if (user) {
+        window.location.href = 'index.html';
+      }
+    });
+  }
 
   // Abas de login/registro
   const loginTab = document.querySelector('[data-tab="login"]');
