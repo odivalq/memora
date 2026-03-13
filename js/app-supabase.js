@@ -418,6 +418,185 @@ function verificarParametrosURL() {
 }
 
 // ============================================
+// FUNÇÕES DE PDF
+// ============================================
+
+/**
+ * Gera e faz download de PDF da entrada atual
+ */
+async function downloadPDF() {
+  const entrada = estado.entradaAtual;
+  if (!entrada) {
+    alert('Nenhuma entrada carregada para exportar.');
+    return;
+  }
+
+  try {
+    // Cria um container temporário para o PDF
+    const pdfContainer = document.createElement('div');
+    pdfContainer.style.padding = '30px';
+    pdfContainer.style.maxWidth = '800px';
+    pdfContainer.style.margin = '0 auto';
+    pdfContainer.style.fontFamily = 'Arial, sans-serif';
+    pdfContainer.style.lineHeight = '1.6';
+    pdfContainer.style.color = '#333';
+    pdfContainer.style.backgroundColor = 'white';
+
+    // Cabeçalho do PDF
+    const header = document.createElement('div');
+    header.style.textAlign = 'center';
+    header.style.marginBottom = '30px';
+    header.style.paddingBottom = '20px';
+    header.style.borderBottom = '2px solid #333';
+    
+    const title = document.createElement('h1');
+    title.style.fontSize = '28px';
+    title.style.margin = '0 0 10px 0';
+    title.style.color = '#333';
+    title.textContent = entrada.titulo;
+    
+    const meta = document.createElement('div');
+    meta.style.fontSize = '14px';
+    meta.style.color = '#666';
+    meta.style.fontWeight = '500';
+    
+    // Obtém categoria
+    const categorias = await carregarCategorias();
+    const categoria = categorias.find(c => c.id === entrada.categoria_id);
+    const categoriaNome = categoria ? categoria.nome : 'Sem categoria';
+    
+    meta.textContent = `${categoriaNome} • ${formatarData(entrada.data_atualizacao)}`;
+    
+    header.appendChild(title);
+    header.appendChild(meta);
+
+    // Conteúdo da entrada
+    const content = document.createElement('div');
+    content.innerHTML = entrada.conteudo;
+    
+    // Remove estilos de hover e interatividade
+    const links = content.querySelectorAll('a');
+    links.forEach(link => {
+      link.style.color = '#0066cc';
+      link.style.textDecoration = 'underline';
+      link.style.pointerEvents = 'none';
+    });
+
+    // Remove botões e elementos de ação
+    const buttons = content.querySelectorAll('button, .entrada-acoes, .sidebar, .header, .footer');
+    buttons.forEach(btn => btn.remove());
+
+    // Estiliza tabelas para PDF
+    const tables = content.querySelectorAll('table');
+    tables.forEach(table => {
+      table.style.width = '100%';
+      table.style.borderCollapse = 'collapse';
+      table.style.margin = '20px 0';
+      
+      const ths = table.querySelectorAll('th');
+      ths.forEach(th => {
+        th.style.backgroundColor = '#f0f0f0';
+        th.style.fontWeight = 'bold';
+        th.style.padding = '12px';
+        th.style.border = '1px solid #ccc';
+      });
+      
+      const tds = table.querySelectorAll('td');
+      tds.forEach(td => {
+        td.style.padding = '12px';
+        td.style.border = '1px solid #ccc';
+      });
+      
+      const trs = table.querySelectorAll('tr');
+      trs.forEach((tr, index) => {
+        if (index % 2 === 0) {
+          tr.style.backgroundColor = '#fafafa';
+        }
+      });
+    });
+
+    // Estiliza blocos de código
+    const preBlocks = content.querySelectorAll('pre');
+    preBlocks.forEach(pre => {
+      pre.style.backgroundColor = '#f4f4f4';
+      pre.style.padding = '15px';
+      pre.style.border = '1px solid #ddd';
+      pre.style.borderRadius = '4px';
+      pre.style.fontFamily = 'Courier New, monospace';
+      pre.style.fontSize = '12px';
+      pre.style.overflow = 'auto';
+    });
+
+    const codeBlocks = content.querySelectorAll('code');
+    codeBlocks.forEach(code => {
+      code.style.backgroundColor = '#f4f4f4';
+      code.style.padding = '2px 6px';
+      code.style.borderRadius = '3px';
+      code.style.fontFamily = 'Courier New, monospace';
+      code.style.fontSize = '12px';
+    });
+
+    // Estiliza citações
+    const blockquotes = content.querySelectorAll('blockquote');
+    blockquotes.forEach(blockquote => {
+      blockquote.style.borderLeft = '4px solid #333';
+      blockquote.style.padding = '15px 20px';
+      blockquote.style.margin = '20px 0';
+      blockquote.style.backgroundColor = '#f9f9f9';
+      blockquote.style.fontStyle = 'italic';
+      blockquote.style.color = '#555';
+    });
+
+    // Estiliza listas
+    const lists = content.querySelectorAll('ul, ol');
+    lists.forEach(list => {
+      list.style.paddingLeft = '25px';
+      list.style.margin = '15px 0';
+    });
+
+    const listItems = content.querySelectorAll('li');
+    listItems.forEach(li => {
+      li.style.marginBottom = '8px';
+    });
+
+    // Monta o container
+    pdfContainer.appendChild(header);
+    pdfContainer.appendChild(content);
+
+    // Configurações do PDF
+    const options = {
+      margin: 1,
+      filename: `memora-${slugify(entrada.titulo)}-${entrada.data_atualizacao.split('T')[0]}.pdf`,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        allowTaint: true
+      },
+      jsPDF: { 
+        unit: 'cm', 
+        format: 'a4', 
+        orientation: 'portrait' 
+      }
+    };
+
+    // Gera e faz download do PDF
+    html2pdf()
+      .set(options)
+      .from(pdfContainer)
+      .save()
+      .then(() => {
+        // Remove o container temporário
+        document.body.removeChild(pdfContainer);
+      });
+
+  } catch (error) {
+    console.error('Erro ao gerar PDF:', error);
+    alert('Erro ao gerar PDF. Tente novamente.');
+  }
+}
+
+// ============================================
 // INICIALIZAÇÃO
 // ============================================
 
@@ -441,6 +620,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (path.includes('entrada.html')) {
     renderizarEntrada();
     renderizarSidebarCategorias();
+    
+    // Configura botão de download PDF
+    const btnDownloadPDF = document.getElementById('btnDownloadPDF');
+    if (btnDownloadPDF) {
+      btnDownloadPDF.addEventListener('click', downloadPDF);
+    }
   }
 });
 
