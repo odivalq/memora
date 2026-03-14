@@ -532,6 +532,526 @@ async function migrarDadosDoJSON() {
   }
 }
 
+// ============================================
+// FUNÇÕES DE NICHOS
+// ============================================
+
+/**
+ * Busca todos os nichos do usuário atual
+ */
+async function buscarNichos() {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) {
+    console.error('Cliente Supabase não disponível');
+    return [];
+  }
+  
+  try {
+    const userId = await obterUsuarioIdAtual();
+    if (!userId) {
+      throw new Error('Usuário não autenticado');
+    }
+    
+    const { data, error } = await supabaseClientInstance
+      .from('nichos')
+      .select('*')
+      .eq('user_id', userId)
+      .order('nome');
+    
+    if (error) {
+      console.error('Erro Supabase ao buscar nichos:', {
+        message: error.message,
+        code: error.code,
+        details: error.details
+      });
+      throw error;
+    }
+    
+    console.log('Nichos carregados com sucesso:', data?.length || 0, 'itens');
+    return data || [];
+  } catch (erro) {
+    console.error('Erro ao buscar nichos:', erro);
+    return [];
+  }
+}
+
+/**
+ * Busca um nicho específico pelo ID
+ */
+async function buscarNichoPorId(id) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
+  
+  try {
+    const { data, error } = await supabaseClientInstance
+      .from('nichos')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    return data;
+  } catch (erro) {
+    console.error('Erro ao buscar nicho:', erro);
+    return null;
+  }
+}
+
+/**
+ * Cria um novo nicho
+ */
+async function criarNicho(nicho) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
+  
+  try {
+    // Obter ID do usuário logado
+    const userId = await obterUsuarioIdAtual();
+    if (!userId) {
+      throw new Error('Usuário não autenticado');
+    }
+    
+    // Validar dados do nicho
+    if (!nicho.nome || nicho.nome.trim().length === 0) {
+      throw new Error('Nome do nicho é obrigatório');
+    }
+    
+    if (nicho.nome.length > 100) {
+      throw new Error('Nome do nicho deve ter no máximo 100 caracteres');
+    }
+    
+    // Adicionar user_id ao objeto nicho
+    const nichoComUser = {
+      ...nicho,
+      user_id: userId
+    };
+    
+    const { data, error } = await supabaseClientInstance
+      .from('nichos')
+      .insert([nichoComUser])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    console.log('Nicho criado com sucesso:', data);
+    return data;
+  } catch (erro) {
+    console.error('Erro ao criar nicho:', erro);
+    return null;
+  }
+}
+
+/**
+ * Atualiza um nicho
+ */
+async function atualizarNicho(id, dados) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
+  
+  try {
+    const { data, error } = await supabaseClientInstance
+      .from('nichos')
+      .update(dados)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  } catch (erro) {
+    console.error('Erro ao atualizar nicho:', erro);
+    return null;
+  }
+}
+
+/**
+ * Exclui um nicho e todo o seu conteúdo
+ */
+async function excluirNicho(id) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return false;
+  
+  try {
+    // Primeiro excluir entradas e categorias do nicho (CASCADE cuida disso)
+    const { error } = await supabaseClientInstance
+      .from('nichos')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    return true;
+  } catch (erro) {
+    console.error('Erro ao excluir nicho:', erro);
+    return false;
+  }
+}
+
+/**
+ * Valida se o usuário tem acesso a um nicho específico
+ */
+async function validarAcessoNicho(nichoId) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return false;
+  
+  try {
+    const userId = await obterUsuarioIdAtual();
+    if (!userId) return false;
+    
+    const { data, error } = await supabaseClientInstance
+      .from('nichos')
+      .select('id')
+      .eq('id', nichoId)
+      .eq('user_id', userId)
+      .single();
+    
+    if (error) return false;
+    return data !== null;
+  } catch (erro) {
+    console.error('Erro ao validar acesso ao nicho:', erro);
+    return false;
+  }
+}
+
+// ============================================
+// FUNÇÕES DE CATEGORIAS (ATUALIZADAS PARA NICHOS)
+// ============================================
+
+/**
+ * Busca categorias de um nicho específico
+ */
+async function buscarCategoriasPorNicho(nichoId) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return [];
+  
+  try {
+    const { data, error } = await supabaseClientInstance
+      .from('categorias')
+      .select('*')
+      .eq('nicho_id', nichoId)
+      .order('nome');
+    
+    if (error) throw error;
+    return data || [];
+  } catch (erro) {
+    console.error('Erro ao buscar categorias do nicho:', erro);
+    return [];
+  }
+}
+
+/**
+ * Cria uma nova categoria em um nicho específico
+ */
+async function criarCategoriaEmNicho(nichoId, categoria) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
+  
+  try {
+    // Validar acesso ao nicho
+    const temAcesso = await validarAcessoNicho(nichoId);
+    if (!temAcesso) {
+      throw new Error('Acesso negado ao nicho');
+    }
+    
+    // Validar dados da categoria
+    if (!categoria.nome || categoria.nome.trim().length === 0) {
+      throw new Error('Nome da categoria é obrigatório');
+    }
+    
+    // Adicionar nicho_id ao objeto categoria
+    const categoriaComNicho = {
+      ...categoria,
+      nicho_id: nichoId
+    };
+    
+    const { data, error } = await supabaseClientInstance
+      .from('categorias')
+      .insert([categoriaComNicho])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    console.log('Categoria criada no nicho com sucesso:', data);
+    return data;
+  } catch (erro) {
+    console.error('Erro ao criar categoria no nicho:', erro);
+    return null;
+  }
+}
+
+/**
+ * Atualiza uma categoria em um nicho específico
+ */
+async function atualizarCategoriaEmNicho(nichoId, categoriaId, dados) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
+  
+  try {
+    // Validar acesso ao nicho
+    const temAcesso = await validarAcessoNicho(nichoId);
+    if (!temAcesso) {
+      throw new Error('Acesso negado ao nicho');
+    }
+    
+    const { data, error } = await supabaseClientInstance
+      .from('categorias')
+      .update(dados)
+      .eq('id', categoriaId)
+      .eq('nicho_id', nichoId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  } catch (erro) {
+    console.error('Erro ao atualizar categoria no nicho:', erro);
+    return null;
+  }
+}
+
+/**
+ * Exclui uma categoria de um nicho específico
+ */
+async function excluirCategoriaDeNicho(nichoId, categoriaId) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return false;
+  
+  try {
+    // Validar acesso ao nicho
+    const temAcesso = await validarAcessoNicho(nichoId);
+    if (!temAcesso) {
+      throw new Error('Acesso negado ao nicho');
+    }
+    
+    const { error } = await supabaseClientInstance
+      .from('categorias')
+      .delete()
+      .eq('id', categoriaId)
+      .eq('nicho_id', nichoId);
+    
+    if (error) throw error;
+    return true;
+  } catch (erro) {
+    console.error('Erro ao excluir categoria do nicho:', erro);
+    return false;
+  }
+}
+
+// ============================================
+// FUNÇÕES DE ENTRADAS (ATUALIZADAS PARA NICHOS)
+// ============================================
+
+/**
+ * Busca entradas de um nicho específico
+ */
+async function buscarEntradasPorNicho(nichoId) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return [];
+  
+  try {
+    const { data, error } = await supabaseClientInstance
+      .from('entradas')
+      .select('*')
+      .eq('nicho_id', nichoId)
+      .order('titulo');
+    
+    if (error) throw error;
+    return data || [];
+  } catch (erro) {
+    console.error('Erro ao buscar entradas do nicho:', erro);
+    return [];
+  }
+}
+
+/**
+ * Busca entradas por termo dentro de um nicho específico
+ */
+async function buscarEntradasPorTermoNoNicho(nichoId, termo) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return [];
+  
+  try {
+    const { data, error } = await supabaseClientInstance
+      .from('entradas')
+      .select('*')
+      .eq('nicho_id', nichoId)
+      .or(`titulo.ilike.%${termo}%,conteudo.ilike.%${termo}%`)
+      .order('titulo');
+    
+    if (error) throw error;
+    return data || [];
+  } catch (erro) {
+    console.error('Erro ao buscar entradas no nicho:', erro);
+    return [];
+  }
+}
+
+/**
+ * Cria uma nova entrada em um nicho específico
+ */
+async function criarEntradaEmNicho(nichoId, entrada) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
+  
+  try {
+    // Validar acesso ao nicho
+    const temAcesso = await validarAcessoNicho(nichoId);
+    if (!temAcesso) {
+      throw new Error('Acesso negado ao nicho');
+    }
+    
+    // Validar dados da entrada
+    if (!entrada.titulo || entrada.titulo.trim().length === 0) {
+      throw new Error('Título da entrada é obrigatório');
+    }
+    
+    if (!entrada.conteudo || entrada.conteudo.trim().length === 0) {
+      throw new Error('Conteúdo da entrada é obrigatório');
+    }
+    
+    // Adicionar nicho_id ao objeto entrada
+    const entradaComNicho = {
+      ...entrada,
+      nicho_id: nichoId
+    };
+    
+    const { data, error } = await supabaseClientInstance
+      .from('entradas')
+      .insert([entradaComNicho])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    console.log('Entrada criada no nicho com sucesso:', data);
+    return data;
+  } catch (erro) {
+    console.error('Erro ao criar entrada no nicho:', erro);
+    return null;
+  }
+}
+
+/**
+ * Atualiza uma entrada em um nicho específico
+ */
+async function atualizarEntradaEmNicho(nichoId, entradaId, dados) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
+  
+  try {
+    // Validar acesso ao nicho
+    const temAcesso = await validarAcessoNicho(nichoId);
+    if (!temAcesso) {
+      throw new Error('Acesso negado ao nicho');
+    }
+    
+    const { data, error } = await supabaseClientInstance
+      .from('entradas')
+      .update(dados)
+      .eq('id', entradaId)
+      .eq('nicho_id', nichoId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  } catch (erro) {
+    console.error('Erro ao atualizar entrada no nicho:', erro);
+    return null;
+  }
+}
+
+/**
+ * Exclui uma entrada de um nicho específico
+ */
+async function excluirEntradaDeNicho(nichoId, entradaId) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return false;
+  
+  try {
+    // Validar acesso ao nicho
+    const temAcesso = await validarAcessoNicho(nichoId);
+    if (!temAcesso) {
+      throw new Error('Acesso negado ao nicho');
+    }
+    
+    const { error } = await supabaseClientInstance
+      .from('entradas')
+      .delete()
+      .eq('id', entradaId)
+      .eq('nicho_id', nichoId);
+    
+    if (error) throw error;
+    return true;
+  } catch (erro) {
+    console.error('Erro ao excluir entrada do nicho:', erro);
+    return false;
+  }
+}
+
+// ============================================
+// FUNÇÕES DE SUPORTE
+// ============================================
+
+/**
+ * Obtém estatísticas de um nicho (quantidade de categorias e entradas)
+ */
+async function obterEstatisticasNicho(nichoId) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return { categorias: 0, entradas: 0 };
+  
+  try {
+    // Contar categorias
+    const { count: categorias, error: errorCat } = await supabaseClientInstance
+      .from('categorias')
+      .select('*', { count: 'exact' })
+      .eq('nicho_id', nichoId);
+    
+    if (errorCat) throw errorCat;
+    
+    // Contar entradas
+    const { count: entradas, error: errorEnt } = await supabaseClientInstance
+      .from('entradas')
+      .select('*', { count: 'exact' })
+      .eq('nicho_id', nichoId);
+    
+    if (errorEnt) throw errorEnt;
+    
+    return {
+      categorias: categorias || 0,
+      entradas: entradas || 0
+    };
+  } catch (erro) {
+    console.error('Erro ao obter estatísticas do nicho:', erro);
+    return { categorias: 0, entradas: 0 };
+  }
+}
+
+/**
+ * Busca todas as categorias e entradas de um nicho (para carregamento rápido)
+ */
+async function carregarConteudoNicho(nichoId) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return { categorias: [], entradas: [] };
+  
+  try {
+    // Validar acesso ao nicho
+    const temAcesso = await validarAcessoNicho(nichoId);
+    if (!temAcesso) {
+      throw new Error('Acesso negado ao nicho');
+    }
+    
+    // Buscar categorias e entradas em paralelo
+    const [categorias, entradas] = await Promise.all([
+      buscarCategoriasPorNicho(nichoId),
+      buscarEntradasPorNicho(nichoId)
+    ]);
+    
+    return { categorias, entradas };
+  } catch (erro) {
+    console.error('Erro ao carregar conteúdo do nicho:', erro);
+    return { categorias: [], entradas: [] };
+  }
+}
+
 // Expõe funções globalmente
 window.WikiSupabase = {
   inicializarSupabase,
@@ -550,5 +1070,30 @@ window.WikiSupabase = {
   verificarUsuario,
   login,
   logout,
-  migrarDadosDoJSON
+  migrarDadosDoJSON,
+  
+  // Funções de nichos
+  buscarNichos,
+  buscarNichoPorId,
+  criarNicho,
+  atualizarNicho,
+  excluirNicho,
+  validarAcessoNicho,
+  
+  // Funções de categorias por nicho
+  buscarCategoriasPorNicho,
+  criarCategoriaEmNicho,
+  atualizarCategoriaEmNicho,
+  excluirCategoriaDeNicho,
+  
+  // Funções de entradas por nicho
+  buscarEntradasPorNicho,
+  buscarEntradasPorTermoNoNicho,
+  criarEntradaEmNicho,
+  atualizarEntradaEmNicho,
+  excluirEntradaDeNicho,
+  
+  // Funções de suporte
+  obterEstatisticasNicho,
+  carregarConteudoNicho
 };
