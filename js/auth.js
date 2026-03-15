@@ -135,6 +135,30 @@ async function verificarAutenticacao() {
     return null;
   }
 
+  // Se o usuário estiver autenticado, mas não tiver registro na tabela users,
+  // isso indica que o trigger não funcionou corretamente. Nesse caso, criamos
+  // o registro manualmente para evitar o erro "Cannot coerce the result to a single JSON object"
+  if (usuarioAtual) {
+    const dadosUsuario = await obterDadosUsuario(usuarioAtual.id);
+    if (!dadosUsuario) {
+      console.warn('Usuário autenticado mas sem registro na tabela users. Criando registro...');
+      try {
+        const client = obterSupabaseCompartilhado();
+        if (client) {
+          await client.from('users').insert({
+            id: usuarioAtual.id,
+            email: usuarioAtual.email,
+            nickname: usuarioAtual.email, // usar email como nickname temporário
+            email_verified: false
+          });
+          console.log('Registro criado na tabela users');
+        }
+      } catch (error) {
+        console.error('Erro ao criar registro na tabela users:', error);
+      }
+    }
+  }
+
   return usuarioAtual;
 }
 
@@ -153,6 +177,11 @@ async function obterDadosUsuario(userId) {
       .single();
 
     if (error) {
+      // Se o erro for "PGRST116" (result contains 0 rows), significa que o usuário não tem registro na tabela users
+      if (error.code === 'PGRST116') {
+        console.warn('Usuário não encontrado na tabela users. Isso pode indicar que o trigger não funcionou corretamente.');
+        return null;
+      }
       console.error('Erro ao obter dados do usuário:', error);
       return null;
     }
@@ -215,17 +244,9 @@ async function criarConta(email, senha, nickname) {
     // armazenar email para exibí‑lo na página de verificação
     localStorage.setItem('signupEmail', email);
 
-    // 2. Não é mais necessário criar manualmente o registro em `users`.
-    //    um trigger no banco (on_auth_user_created) já faz isso automaticamente.
-    //    Se desejar guardar o nickname ou outros campos, use um UPDATE
-    //    separado após a confirmação de e‑mail ou no primeiro login.
-
-    // Exemplo de atualização opcional (comentado):
-    // await supabaseAuth
-    //   .from('users')
-    //   .update({ nickname })
-    //   .eq('id', user.id);
-
+    // 2. Não criar registro manualmente na tabela users
+    // O registro será criado quando necessário no verificarAutenticacao()
+    // Isso evita o erro de foreign key constraint
 
     return {
       success: true,
