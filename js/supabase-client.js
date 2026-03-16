@@ -724,16 +724,21 @@ async function buscarCategoriasPorNicho(nichoId) {
   if (!supabaseClientInstance) return [];
   
   try {
+    console.log('🔍 Buscando categorias para nicho:', nichoId);
     const { data, error } = await supabaseClientInstance
       .from('categorias')
       .select('*')
       .eq('nicho_id', nichoId)
       .order('nome');
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Erro ao buscar categorias:', error);
+      throw error;
+    }
+    console.log('✅ Categorias encontradas:', data?.length || 0, data);
     return data || [];
   } catch (erro) {
-    console.error('Erro ao buscar categorias do nicho:', erro);
+    console.error('❌ Erro ao buscar categorias do nicho:', erro);
     return [];
   }
 }
@@ -848,16 +853,21 @@ async function buscarEntradasPorNicho(nichoId) {
   if (!supabaseClientInstance) return [];
   
   try {
+    console.log('🔍 Buscando entradas para nicho:', nichoId);
     const { data, error } = await supabaseClientInstance
       .from('entradas')
       .select('*')
       .eq('nicho_id', nichoId)
       .order('titulo');
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Erro ao buscar entradas:', error);
+      throw error;
+    }
+    console.log('✅ Entradas encontradas:', data?.length || 0, data);
     return data || [];
   } catch (erro) {
-    console.error('Erro ao buscar entradas do nicho:', erro);
+    console.error('❌ Erro ao buscar entradas do nicho:', erro);
     return [];
   }
 }
@@ -1033,8 +1043,12 @@ async function carregarConteudoNicho(nichoId) {
   if (!supabaseClientInstance) return { categorias: [], entradas: [] };
   
   try {
+    console.log('📦 Carregando conteúdo do nicho:', nichoId);
+    
     // Validar acesso ao nicho
     const temAcesso = await validarAcessoNicho(nichoId);
+    console.log('🔐 Validação de acesso:', temAcesso);
+    
     if (!temAcesso) {
       throw new Error('Acesso negado ao nicho');
     }
@@ -1045,9 +1059,10 @@ async function carregarConteudoNicho(nichoId) {
       buscarEntradasPorNicho(nichoId)
     ]);
     
+    console.log('📊 Resultado final - Categorias:', categorias?.length || 0, 'Entradas:', entradas?.length || 0);
     return { categorias, entradas };
   } catch (erro) {
-    console.error('Erro ao carregar conteúdo do nicho:', erro);
+    console.error('❌ Erro ao carregar conteúdo do nicho:', erro);
     return { categorias: [], entradas: [] };
   }
 }
