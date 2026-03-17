@@ -545,5 +545,6 @@ function mostrarLoading(show) {
 // FUNÇÕES GLOBAIS (para onclick nos botões)
 // ============================================
 
+window.abrirModalCriar = abrirModalCriar;
 window.abrirModalEditar = abrirModalEditar;
 window.abrirModalExcluir = abrirModalExcluir;
