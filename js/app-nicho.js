@@ -121,20 +121,9 @@ function atualizarHeader() {
  * Atualiza a interface baseado no estado atual
  */
 function atualizarInterface() {
-  console.log('🎨 Atualizando interface...', {
-    categorias: estado.categorias?.length || 0,
-    entradas: estado.entradas?.length || 0
-  });
-  
   const categoriesSection = document.getElementById('categoriesSection');
   const allEntriesSection = document.getElementById('allEntriesSection');
   const searchResultsSection = document.getElementById('searchResultsSection');
-
-  console.log('📋 Elementos encontrados:', {
-    categoriesSection: !!categoriesSection,
-    allEntriesSection: !!allEntriesSection,
-    searchResultsSection: !!searchResultsSection
-  });
 
   // Esconder todas as seções inicialmente
   categoriesSection.classList.add('hidden');
@@ -146,16 +135,11 @@ function atualizarInterface() {
   const busca = urlParams.get('busca');
   const todas = urlParams.get('todas');
 
-  console.log('🔗 Parâmetros URL:', { busca, todas });
-
   if (busca) {
-    console.log('🔍 Renderizando busca...');
     renderizarResultadosBusca(busca);
   } else if (todas) {
-    console.log('📄 Renderizando todas entradas...');
     renderizarTodasEntradas();
   } else {
-    console.log('📂 Renderizando categorias...');
     renderizarCategorias();
   }
 }
@@ -164,25 +148,10 @@ function atualizarInterface() {
  * Renderiza o grid de categorias do nicho
  */
 async function renderizarCategorias() {
-  console.log('🎨 renderizarCategorias() chamada');
-  
   const grid = document.getElementById('categoriasGrid');
-  console.log('📦 Grid element:', !!grid);
-  
-  if (!grid) {
-    console.error('❌ Elemento categoriasGrid não encontrado no DOM!');
-    return;
-  }
-
-  console.log('📊 Estado atual:', {
-    categorias: estado.categorias?.length || 0,
-    entradas: estado.entradas?.length || 0,
-    categoriasData: estado.categorias,
-    entradasData: estado.entradas
-  });
+  if (!grid) return;
 
   if (estado.categorias.length === 0) {
-    console.log('⚠️ Nenhuma categoria para renderizar');
     grid.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
         <div style="font-size: 3rem; margin-bottom: 15px;">📂</div>
@@ -194,14 +163,8 @@ async function renderizarCategorias() {
     return;
   }
 
-  console.log('✅ Renderizando', estado.categorias.length, 'categoria(s)');
-
   grid.innerHTML = estado.categorias.map(cat => {
-    console.log('🏷️ Processando categoria:', cat.nome, 'ID:', cat.id);
-    
     const entradasCat = estado.entradas.filter(e => e.categoria_id === cat.id);
-    console.log('   📝 Entradas encontradas para', cat.nome, ':', entradasCat.length, entradasCat);
-    
     const entradasHtml = entradasCat.slice(0, 5).map(e => `
       <li><a href="entrada.html?id=${e.id}&nicho=${estado.nichoId}">${e.titulo}</a></li>
     `).join('');
@@ -229,13 +192,10 @@ async function renderizarCategorias() {
     `;
   }).join('');
   
-  console.log('✅ HTML gerado e inserido no grid');
-  
   // Remover classe hidden da seção
   const categoriesSection = document.getElementById('categoriesSection');
   if (categoriesSection) {
     categoriesSection.classList.remove('hidden');
-    console.log('✅ Seção de categorias exibida (hidden removido)');
   }
 }
 
