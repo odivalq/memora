@@ -200,6 +200,7 @@ function abrirModalCriar() {
   
   // Configurar modal para criação
   modalTitle.textContent = 'Novo Nicho';
+  document.getElementById('modalSaveBtn').onclick = () => salvarNicho();
   nichoForm.reset();
   
   // Valores padrão
@@ -442,8 +443,6 @@ function configurarEventListeners() {
   document.getElementById('modalCancelBtn')?.addEventListener('click', () => {
     document.getElementById('nichoModalOverlay').classList.remove('active');
   });
-
-  document.getElementById('modalSaveBtn')?.addEventListener('click', () => salvarNicho());
 
   // Modal de exclusão
   document.getElementById('deleteModalCloseBtn')?.addEventListener('click', () => {
