@@ -430,9 +430,9 @@ async function buscarNichos(termo) {
 
 function configurarEventListeners() {
   // Botões de ação
-  document.getElementById('btnNovoNicho')?.addEventListener('click', abrirModalCriar);
-  document.getElementById('btnGetStarted')?.addEventListener('click', abrirModalCriar);
-  document.getElementById('btnCreateFirstNicho')?.addEventListener('click', abrirModalCriar);
+  document.getElementById('btnNovoNicho')?.addEventListener('click', (e) => { e.stopPropagation(); abrirModalCriar(); });
+  document.getElementById('btnGetStarted')?.addEventListener('click', (e) => { e.stopPropagation(); abrirModalCriar(); });
+  document.getElementById('btnCreateFirstNicho')?.addEventListener('click', (e) => { e.stopPropagation(); abrirModalCriar(); });
 
   // Modal de nicho
   document.getElementById('modalCloseBtn')?.addEventListener('click', () => {
