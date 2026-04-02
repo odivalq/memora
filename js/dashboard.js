@@ -173,11 +173,11 @@ async function renderizarNichos() {
           <span>📁</span>
           <span>Acessar Nicho</span>
         </a>
-        <button class="nicho-btn nicho-btn-secondary" onclick="abrirModalEditar('${nicho.id}')">
+        <button class="nicho-btn nicho-btn-secondary" onclick="event.stopPropagation(); abrirModalEditar('${nicho.id}')">
           <span>✏️</span>
           <span>Editar</span>
         </button>
-        <button class="nicho-btn nicho-btn-danger" onclick="abrirModalExcluir('${nicho.id}', '${nicho.nome}')">
+        <button class="nicho-btn nicho-btn-danger" onclick="event.stopPropagation(); abrirModalExcluir('${nicho.id}', '${nicho.nome}')">
           <span>🗑️</span>
           <span>Excluir</span>
         </button>
