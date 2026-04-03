@@ -587,3 +587,234 @@
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(51, 102, 204, 0.4);
 }
+
+/* ============================================
+   PHASE 4 — NOTIFICATIONS & SHARING BADGES
+   ============================================ */
+
+/* Notification Bell */
+.notif-wrapper {
+  position: relative;
+}
+
+.btn-bell {
+  position: relative;
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--cor-texto);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-bell:hover {
+  background: #f3f4f6;
+  border-color: var(--cor-primaria);
+}
+
+.bell-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #dc2626;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+/* Notification Panel */
+.notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 360px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  z-index: 500;
+  overflow: hidden;
+}
+
+.notif-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.notif-panel-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--cor-texto);
+}
+
+.notif-mark-all {
+  background: none;
+  border: none;
+  font-size: 0.78rem;
+  color: var(--cor-primaria);
+  cursor: pointer;
+  padding: 0;
+}
+
+.notif-mark-all:hover {
+  text-decoration: underline;
+}
+
+.notif-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notif-empty {
+  padding: 30px;
+  text-align: center;
+  color: var(--cor-texto-claro);
+  font-size: 0.9rem;
+}
+
+/* Notification Item */
+.notif-item {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.15s ease;
+}
+
+.notif-item:last-child {
+  border-bottom: none;
+}
+
+.notif-item:hover {
+  background: #f8fafc;
+}
+
+.notif-item.nao-lida {
+  background: #eff6ff;
+  border-left: 3px solid var(--cor-primaria);
+}
+
+.notif-item.nao-lida:hover {
+  background: #dbeafe;
+}
+
+.notif-msg {
+  font-size: 0.88rem;
+  color: var(--cor-texto);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.notif-nicho-desc {
+  font-size: 0.8rem;
+  color: var(--cor-texto-claro);
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.notif-acoes {
+  display: flex;
+  gap: 8px;
+}
+
+.notif-btn-aceitar {
+  flex: 1;
+  padding: 7px 12px;
+  background: var(--cor-primaria);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.notif-btn-aceitar:hover {
+  background: #2563eb;
+}
+
+.notif-btn-recusar {
+  flex: 1;
+  padding: 7px 12px;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.notif-btn-recusar:hover {
+  background: #fecaca;
+}
+
+.notif-data {
+  font-size: 0.75rem;
+  color: var(--cor-texto-claro);
+  margin-top: 6px;
+}
+
+/* Shared nicho badge on cards */
+.badge-compartilhado-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* Toast */
+.toast {
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: white;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  animation: toastIn 0.3s ease forwards;
+  max-width: 320px;
+  line-height: 1.4;
+}
+
+.toast-saindo {
+  animation: toastOut 0.3s ease forwards;
+}
+
+.toast-sucesso { background: #059669; }
+.toast-erro    { background: #dc2626; }
+.toast-info    { background: #2563eb; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(12px); }
+}

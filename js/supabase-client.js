@@ -552,12 +552,13 @@ async function buscarNichos() {
       throw new Error('Usuário não autenticado');
     }
     
+    // RLS garante que só retornam nichos acessíveis (próprios + compartilhados).
+    // Não filtramos por user_id aqui — a política cuida disso.
     const { data, error } = await supabaseClientInstance
       .from('nichos')
       .select('*')
-      .eq('user_id', userId)
       .order('nome');
-    
+
     if (error) {
       console.error('Erro Supabase ao buscar nichos:', {
         message: error.message,
@@ -566,9 +567,16 @@ async function buscarNichos() {
       });
       throw error;
     }
-    
-    console.log('Nichos carregados com sucesso:', data?.length || 0, 'itens');
-    return data || [];
+
+    // Anota cada nicho como próprio ou compartilhado para uso na UI
+    const nichos = (data || []).map(n => ({
+      ...n,
+      isOwner: n.user_id === userId,
+      isShared: n.user_id !== userId
+    }));
+
+    console.log('Nichos carregados com sucesso:', nichos.length, 'itens');
+    return nichos;
   } catch (erro) {
     console.error('Erro ao buscar nichos:', erro);
     return [];
@@ -669,20 +677,21 @@ async function atualizarNicho(id, dados) {
  */
 async function excluirNicho(id) {
   if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
-  if (!supabaseClientInstance) return false;
-  
+  if (!supabaseClientInstance) return { sucesso: false };
+
   try {
-    // Primeiro excluir entradas e categorias do nicho (CASCADE cuida disso)
-    const { error } = await supabaseClientInstance
-      .from('nichos')
-      .delete()
-      .eq('id', id);
-    
+    // Usa stored procedure para lidar com nichos compartilhados:
+    // - Se tiver membros: transfere posse ao membro mais antigo (não exclui).
+    // - Se não tiver membros: exclui (CASCADE apaga categorias e entradas).
+    const { data, error } = await supabaseClientInstance
+      .rpc('transferir_ou_excluir_nicho', { p_nicho_id: id });
+
     if (error) throw error;
-    return true;
+    // data === 'transferred' | 'deleted'
+    return { sucesso: true, resultado: data };
   } catch (erro) {
     console.error('Erro ao excluir nicho:', erro);
-    return false;
+    return { sucesso: false, erro: erro.message };
   }
 }
 
@@ -697,13 +706,14 @@ async function validarAcessoNicho(nichoId) {
     const userId = await obterUsuarioIdAtual();
     if (!userId) return false;
     
+    // RLS verifica acesso: dono OU membro via nicho_membros.
+    // Não filtramos por user_id — a política de SELECT já faz isso.
     const { data, error } = await supabaseClientInstance
       .from('nichos')
       .select('id')
       .eq('id', nichoId)
-      .eq('user_id', userId)
       .single();
-    
+
     if (error) return false;
     return data !== null;
   } catch (erro) {
@@ -757,10 +767,12 @@ async function criarCategoriaEmNicho(nichoId, categoria) {
       throw new Error('Nome da categoria é obrigatório');
     }
     
-    // Adicionar nicho_id ao objeto categoria
+    const userId = await obterUsuarioIdAtual();
+    // Adicionar nicho_id e user_id ao objeto categoria
     const categoriaComNicho = {
       ...categoria,
-      nicho_id: nichoId
+      nicho_id: nichoId,
+      user_id: userId
     };
     
     const { data, error } = await supabaseClientInstance
@@ -792,9 +804,10 @@ async function atualizarCategoriaEmNicho(nichoId, categoriaId, dados) {
       throw new Error('Acesso negado ao nicho');
     }
     
+    const userId = await obterUsuarioIdAtual();
     const { data, error } = await supabaseClientInstance
       .from('categorias')
-      .update(dados)
+      .update({ ...dados, updated_by: userId })
       .eq('id', categoriaId)
       .eq('nicho_id', nichoId)
       .select()
@@ -908,10 +921,12 @@ async function criarEntradaEmNicho(nichoId, entrada) {
       throw new Error('Conteúdo da entrada é obrigatório');
     }
     
-    // Adicionar nicho_id ao objeto entrada
+    const userId = await obterUsuarioIdAtual();
+    // Adicionar nicho_id e user_id ao objeto entrada
     const entradaComNicho = {
       ...entrada,
-      nicho_id: nichoId
+      nicho_id: nichoId,
+      user_id: userId
     };
     
     const { data, error } = await supabaseClientInstance
@@ -943,9 +958,10 @@ async function atualizarEntradaEmNicho(nichoId, entradaId, dados) {
       throw new Error('Acesso negado ao nicho');
     }
     
+    const userId = await obterUsuarioIdAtual();
     const { data, error } = await supabaseClientInstance
       .from('entradas')
-      .update(dados)
+      .update({ ...dados, updated_by: userId })
       .eq('id', entradaId)
       .eq('nicho_id', nichoId)
       .select()
@@ -1052,6 +1068,359 @@ async function carregarConteudoNicho(nichoId) {
   }
 }
 
+// ============================================
+// FUNÇÕES DE COMPARTILHAMENTO
+// ============================================
+
+/**
+ * Verifica se o usuário atual é o dono de um nicho.
+ * Usado para decidir quais controles mostrar na UI (ex: botão Compartilhar).
+ */
+async function verificarSeEhDono(nichoId) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return false;
+
+  try {
+    const userId = await obterUsuarioIdAtual();
+    if (!userId) return false;
+
+    const { data, error } = await supabaseClientInstance
+      .from('nichos')
+      .select('user_id')
+      .eq('id', nichoId)
+      .single();
+
+    if (error) return false;
+    return data?.user_id === userId;
+  } catch (erro) {
+    console.error('Erro ao verificar dono do nicho:', erro);
+    return false;
+  }
+}
+
+/**
+ * Busca usuários por nickname para o autocomplete do modal de compartilhar.
+ * Retorna até 10 resultados com email mascarado para diferenciar homônimos.
+ * @param {string} termo - Texto digitado pelo usuário
+ * @returns {Array<{id, nickname, email_masked}>}
+ */
+async function buscarUsuariosPorNickname(termo) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return [];
+
+  try {
+    const { data, error } = await supabaseClientInstance
+      .rpc('buscar_usuarios_por_nickname', { p_termo: termo });
+
+    if (error) throw error;
+    return data || [];
+  } catch (erro) {
+    console.error('Erro ao buscar usuários:', erro);
+    return [];
+  }
+}
+
+/**
+ * Envia um convite de compartilhamento para outro usuário.
+ * Só pode ser chamado pelo dono do nicho.
+ * @param {string} nichoId
+ * @param {string} paraUserId - UUID do usuário a ser convidado
+ * @returns {string|null} ID do convite criado, ou null em caso de erro
+ */
+async function enviarConvite(nichoId, paraUserId) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
+
+  try {
+    const { data, error } = await supabaseClientInstance
+      .rpc('enviar_convite', { p_nicho_id: nichoId, p_para_user_id: paraUserId });
+
+    if (error) throw error;
+    return data; // convite_id
+  } catch (erro) {
+    console.error('Erro ao enviar convite:', erro);
+    throw erro; // Re-lança para a UI exibir a mensagem de erro específica
+  }
+}
+
+/**
+ * Aceita ou recusa um convite de compartilhamento.
+ * @param {string} conviteId
+ * @param {boolean} aceitar
+ */
+async function responderConvite(conviteId, aceitar) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return;
+
+  try {
+    const { error } = await supabaseClientInstance
+      .rpc('responder_convite', { p_convite_id: conviteId, p_aceitar: aceitar });
+
+    if (error) throw error;
+  } catch (erro) {
+    console.error('Erro ao responder convite:', erro);
+    throw erro;
+  }
+}
+
+/**
+ * Remove um membro do nicho e entrega a ele uma cópia independente (fork).
+ * Só pode ser chamado pelo dono do nicho.
+ * @param {string} nichoId
+ * @param {string} userIdRemover - UUID do membro a ser removido
+ */
+async function revogarMembroEForkar(nichoId, userIdRemover) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return;
+
+  try {
+    const { error } = await supabaseClientInstance
+      .rpc('revogar_membro_e_forkar', {
+        p_nicho_id: nichoId,
+        p_user_id_remover: userIdRemover
+      });
+
+    if (error) throw error;
+  } catch (erro) {
+    console.error('Erro ao revogar membro:', erro);
+    throw erro;
+  }
+}
+
+/**
+ * Busca a lista de membros de um nicho, com nickname e email mascarado.
+ * @param {string} nichoId
+ * @returns {Array<{id, user_id, role, joined_at, nickname, email_masked}>}
+ */
+async function buscarMembrosNicho(nichoId) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return [];
+
+  try {
+    const { data: membros, error } = await supabaseClientInstance
+      .from('nicho_membros')
+      .select('id, user_id, role, joined_at, convidado_por')
+      .eq('nicho_id', nichoId)
+      .order('joined_at');
+
+    if (error) throw error;
+    if (!membros?.length) return [];
+
+    // Busca perfis dos membros em lote
+    const userIds = membros.map(m => m.user_id);
+    const { data: users, error: userError } = await supabaseClientInstance
+      .from('users')
+      .select('id, nickname, email')
+      .in('id', userIds);
+
+    if (userError) throw userError;
+
+    const userMap = {};
+    (users || []).forEach(u => {
+      userMap[u.id] = {
+        nickname: u.nickname,
+        // Mascara email igual à stored procedure: j***@gmail.com
+        email_masked: u.email
+          ? u.email.charAt(0) + '***@' + u.email.split('@')[1]
+          : ''
+      };
+    });
+
+    return membros.map(m => ({
+      ...m,
+      nickname: userMap[m.user_id]?.nickname || 'Usuário',
+      email_masked: userMap[m.user_id]?.email_masked || ''
+    }));
+  } catch (erro) {
+    console.error('Erro ao buscar membros do nicho:', erro);
+    return [];
+  }
+}
+
+/**
+ * Busca as notificações do usuário atual.
+ * @param {boolean} apenasNaoLidas - Se true, retorna só as não lidas
+ * @returns {Array}
+ */
+async function buscarNotificacoes(apenasNaoLidas = false) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return [];
+
+  try {
+    let query = supabaseClientInstance
+      .from('notificacoes')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (apenasNaoLidas) {
+      query = query.eq('lida', false);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  } catch (erro) {
+    console.error('Erro ao buscar notificações:', erro);
+    return [];
+  }
+}
+
+/**
+ * Conta notificações não lidas do usuário atual.
+ * Usado para o badge do sino no dashboard.
+ * @returns {number}
+ */
+async function contarNotificacoesNaoLidas() {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return 0;
+
+  try {
+    const { count, error } = await supabaseClientInstance
+      .from('notificacoes')
+      .select('*', { count: 'exact', head: true })
+      .eq('lida', false);
+
+    if (error) throw error;
+    return count || 0;
+  } catch (erro) {
+    console.error('Erro ao contar notificações:', erro);
+    return 0;
+  }
+}
+
+/**
+ * Marca uma notificação específica como lida.
+ * @param {string} id
+ */
+async function marcarNotificacaoComoLida(id) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return;
+
+  try {
+    const { error } = await supabaseClientInstance
+      .from('notificacoes')
+      .update({ lida: true })
+      .eq('id', id);
+
+    if (error) throw error;
+  } catch (erro) {
+    console.error('Erro ao marcar notificação como lida:', erro);
+  }
+}
+
+/**
+ * Marca todas as notificações do usuário atual como lidas.
+ */
+async function marcarTodasNotificacoesComoLidas() {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return;
+
+  try {
+    const { error } = await supabaseClientInstance
+      .from('notificacoes')
+      .update({ lida: true })
+      .eq('lida', false);
+    // RLS restringe o UPDATE ao user_id = auth.uid(), não precisamos filtrar aqui.
+
+    if (error) throw error;
+  } catch (erro) {
+    console.error('Erro ao marcar todas notificações como lidas:', erro);
+  }
+}
+
+// ============================================
+// FUNÇÕES DE REALTIME (PHASE 5)
+// ============================================
+
+/**
+ * Busca perfis (id + nickname) de uma lista de UUIDs.
+ * Usado para resolver updated_by → nickname nas views de entradas.
+ * @param {string[]} ids
+ * @returns {Array<{id, nickname}>}
+ */
+async function buscarPerfisPorIds(ids) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance || !ids?.length) return [];
+
+  try {
+    const { data, error } = await supabaseClientInstance
+      .from('users')
+      .select('id, nickname')
+      .in('id', ids);
+
+    if (error) throw error;
+    return data || [];
+  } catch (erro) {
+    console.error('Erro ao buscar perfis:', erro);
+    return [];
+  }
+}
+
+/**
+ * Inicia uma subscrição Realtime para categorias e entradas de um nicho.
+ * Retorna o canal criado (necessário para pararRealtime()).
+ * @param {string} nichoId
+ * @param {{ onCategoria: Function, onEntrada: Function }} handlers
+ * @returns {RealtimeChannel}
+ */
+function iniciarRealtimeNicho(nichoId, { onCategoria, onEntrada }) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
+
+  const canal = supabaseClientInstance
+    .channel(`nicho-${nichoId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'categorias', filter: `nicho_id=eq.${nichoId}` },
+      (payload) => onCategoria && onCategoria(payload)
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'entradas', filter: `nicho_id=eq.${nichoId}` },
+      (payload) => onEntrada && onEntrada(payload)
+    )
+    .subscribe((status) => {
+      console.log('Realtime nicho status:', status);
+    });
+
+  return canal;
+}
+
+/**
+ * Inicia uma subscrição Realtime para notificações do usuário atual.
+ * RLS garante que só chegam eventos do próprio usuário.
+ * @param {Function} onNova - Chamado com o payload de cada INSERT
+ * @returns {RealtimeChannel}
+ */
+function iniciarRealtimeNotificacoes(onNova) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
+
+  const canal = supabaseClientInstance
+    .channel('notificacoes-usuario')
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'notificacoes' },
+      (payload) => onNova && onNova(payload)
+    )
+    .subscribe((status) => {
+      console.log('Realtime notificações status:', status);
+    });
+
+  return canal;
+}
+
+/**
+ * Para e remove um canal Realtime.
+ * @param {RealtimeChannel} canal
+ */
+function pararRealtime(canal) {
+  if (canal && supabaseClientInstance) {
+    supabaseClientInstance.removeChannel(canal);
+  }
+}
+
 // Expõe funções globalmente
 window.WikiSupabase = {
   inicializarSupabase,
@@ -1095,5 +1464,22 @@ window.WikiSupabase = {
   
   // Funções de suporte
   obterEstatisticasNicho,
-  carregarConteudoNicho
+  carregarConteudoNicho,
+
+  // Funções de compartilhamento
+  buscarPerfisPorIds,
+  verificarSeEhDono,
+  // Funções de realtime
+  iniciarRealtimeNicho,
+  iniciarRealtimeNotificacoes,
+  pararRealtime,
+  buscarUsuariosPorNickname,
+  enviarConvite,
+  responderConvite,
+  revogarMembroEForkar,
+  buscarMembrosNicho,
+  buscarNotificacoes,
+  contarNotificacoesNaoLidas,
+  marcarNotificacaoComoLida,
+  marcarTodasNotificacoesComoLidas
 };

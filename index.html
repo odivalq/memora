@@ -74,6 +74,34 @@
     </div>
   </header>
 
+  <!-- Nicho Banner -->
+  <section id="nichoBanner" class="nicho-banner hidden">
+    <div class="container">
+      <div class="nicho-banner-content">
+        <div class="nicho-banner-info">
+          <span class="nicho-banner-icone" id="nichoBannerIcone"></span>
+          <div>
+            <h1 class="nicho-banner-nome" id="nichoBannerNome"></h1>
+            <p class="nicho-banner-desc" id="nichoBannerDesc"></p>
+          </div>
+        </div>
+        <div class="nicho-banner-acoes">
+          <div class="membros-preview" id="membrosPreview"></div>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnCompartilhar" style="display:none">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+            Compartilhar
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Conteúdo Principal -->
   <main class="main-content">
     <div class="container">
@@ -117,6 +145,46 @@
       <p>Memora- Sua enciclopédia colaborativa. Acesse e edite de qualquer lugar.</p>
     </div>
   </footer>
+
+  <!-- Modal Compartilhar -->
+  <div class="modal-overlay" id="modalCompartilharOverlay">
+    <div class="modal modal-compartilhar">
+      <div class="modal-header">
+        <h3 class="modal-titulo" id="modalCompartilharTitulo">Compartilhar Nicho</h3>
+        <button type="button" class="modal-close" id="modalCompartilharClose" aria-label="Fechar">&#x2715;</button>
+      </div>
+
+      <div class="compartilhar-campo">
+        <label for="compartilharInput">Buscar usuário pelo nickname</label>
+        <div class="compartilhar-input-wrapper">
+          <input type="text" id="compartilharInput" placeholder="Digite um nickname..." autocomplete="off">
+          <div class="compartilhar-dropdown hidden" id="compartilharDropdown"></div>
+        </div>
+      </div>
+
+      <div class="usuario-selecionado hidden" id="usuarioSelecionado">
+        <div class="dropdown-item-avatar" id="usuarioSelecionadoAvatar"></div>
+        <div class="usuario-selecionado-info">
+          <div class="usuario-selecionado-nome" id="usuarioSelecionadoNome"></div>
+          <div class="usuario-selecionado-email" id="usuarioSelecionadoEmail"></div>
+        </div>
+        <button type="button" class="usuario-selecionado-limpar" id="btnLimparSelecao" title="Remover seleção">&#x2715;</button>
+      </div>
+
+      <div class="compartilhar-membros" id="compartilharMembros">
+        <p class="compartilhar-membros-titulo">Membros atuais</p>
+        <div id="compartilharMembrosLista"></div>
+      </div>
+
+      <div class="modal-acoes" style="margin-top: 20px;">
+        <button type="button" class="btn btn-secondary" id="btnCancelarCompartilhar">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnConfirmarCompartilhar" disabled>Enviar convite</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toastContainer"></div>
 
   <!-- Scripts -->
   <script src="js/supabase-client.js"></script>

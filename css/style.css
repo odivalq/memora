@@ -1640,3 +1640,385 @@ button:disabled {
     font-size: 0.85rem;
   }
 }
+
+/* ============================================
+   NICHO BANNER
+   ============================================ */
+
+.nicho-banner {
+  background: white;
+  border-bottom: 1px solid var(--cor-borda);
+  padding: 18px 0;
+}
+
+.nicho-banner-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.nicho-banner-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.nicho-banner-icone {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--raio-borda);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.nicho-banner-nome {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.nicho-banner-desc {
+  color: var(--cor-texto-claro);
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 480px;
+}
+
+.nicho-banner-acoes {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Badge "Compartilhado" mostrado para membros não-donos */
+.badge-compartilhado {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: rgba(40, 201, 142, 0.12);
+  color: var(--cor-primaria-escura);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid rgba(40, 201, 142, 0.3);
+  white-space: nowrap;
+}
+
+/* Avatares de membros na banner */
+.membros-preview {
+  display: flex;
+  align-items: center;
+}
+
+.membro-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--cor-primaria);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 2px solid white;
+  margin-left: -8px;
+  cursor: default;
+}
+
+.membro-avatar:first-child {
+  margin-left: 0;
+}
+
+.membro-avatar-extra {
+  background: #d0d3d6;
+  color: var(--cor-texto);
+  font-size: 0.7rem;
+}
+
+/* ============================================
+   MODAL COMPARTILHAR
+   ============================================ */
+
+.modal-compartilhar {
+  max-width: 560px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.modal-header .modal-titulo {
+  margin-bottom: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: var(--cor-texto-claro);
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.modal-close:hover {
+  color: var(--cor-texto);
+}
+
+/* Campo de busca */
+.compartilhar-campo {
+  margin-bottom: 14px;
+}
+
+.compartilhar-campo label {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--cor-texto-claro);
+}
+
+.compartilhar-input-wrapper {
+  position: relative;
+}
+
+.compartilhar-input-wrapper input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--cor-borda);
+  border-radius: var(--raio-borda);
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+  background: white;
+}
+
+.compartilhar-input-wrapper input:focus {
+  outline: none;
+  border-color: var(--cor-primaria);
+  box-shadow: 0 0 0 3px rgba(40, 201, 142, 0.1);
+}
+
+/* Dropdown de autocomplete */
+.compartilhar-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-borda);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  z-index: 10;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.dropdown-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.12s;
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background: var(--cor-secundaria);
+}
+
+.dropdown-item-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--cor-primaria);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.dropdown-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dropdown-item-nome {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.dropdown-item-email {
+  font-size: 0.8rem;
+  color: var(--cor-texto-claro);
+}
+
+.dropdown-vazio {
+  padding: 14px;
+  text-align: center;
+  color: var(--cor-texto-claro);
+  font-size: 0.9rem;
+}
+
+/* Chip do usuário selecionado */
+.usuario-selecionado {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(40, 201, 142, 0.08);
+  border: 1px solid rgba(40, 201, 142, 0.3);
+  border-radius: var(--raio-borda);
+  margin-bottom: 14px;
+}
+
+.usuario-selecionado-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.usuario-selecionado-nome {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.usuario-selecionado-email {
+  font-size: 0.8rem;
+  color: var(--cor-texto-claro);
+}
+
+.usuario-selecionado-limpar {
+  background: none;
+  border: none;
+  color: var(--cor-texto-claro);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 1rem;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.usuario-selecionado-limpar:hover {
+  color: var(--cor-erro);
+}
+
+/* Lista de membros dentro do modal */
+.compartilhar-membros {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.compartilhar-membros-titulo {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cor-texto-claro);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.membro-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.membro-item:last-child {
+  border-bottom: none;
+}
+
+.membro-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.membro-item-nome {
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.membro-item-meta {
+  font-size: 0.78rem;
+  color: var(--cor-texto-claro);
+}
+
+.membro-sem-membros {
+  color: var(--cor-texto-claro);
+  font-size: 0.9rem;
+  padding: 6px 0;
+}
+
+/* ============================================
+   TOASTS
+   ============================================ */
+
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  padding: 12px 18px;
+  border-radius: var(--raio-borda);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  animation: toastEntrar 0.25s ease forwards;
+  pointer-events: auto;
+  max-width: 340px;
+  line-height: 1.4;
+}
+
+.toast-sucesso { background: var(--cor-sucesso); }
+.toast-erro    { background: var(--cor-erro); }
+.toast-info    { background: #4a6fa5; }
+
+@keyframes toastEntrar {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastSair {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(16px); }
+}
+
+.toast.saindo {
+  animation: toastSair 0.25s ease forwards;
+}
