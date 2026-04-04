@@ -1411,6 +1411,111 @@ function iniciarRealtimeNotificacoes(onNova) {
   return canal;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// COMENTÁRIOS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Busca comentários raiz de uma entrada, com nickname do autor.
+ * @param {string} entradaId
+ * @returns {Promise<Array>}
+ */
+async function buscarComentariosPorEntrada(entradaId) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  const { data, error } = await supabaseClientInstance
+    .from('comentarios')
+    .select('*, autor:users(nickname)')
+    .eq('entrada_id', entradaId)
+    .is('parent_id', null)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Busca respostas diretas de um comentário, com nickname do autor.
+ * @param {string} comentarioId
+ * @returns {Promise<Array>}
+ */
+async function buscarRespostasPorComentario(comentarioId) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  const { data, error } = await supabaseClientInstance
+    .from('comentarios')
+    .select('*, autor:users(nickname)')
+    .eq('parent_id', comentarioId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Cria um comentário ou resposta.
+ * @param {string} entradaId
+ * @param {string} nichoId
+ * @param {string} conteudo
+ * @param {string|null} parentId  - null para comentário raiz, id para resposta
+ * @returns {Promise<Object>}
+ */
+async function criarComentario(entradaId, nichoId, conteudo, parentId = null) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  const { data: { user } } = await supabaseClientInstance.auth.getUser();
+  if (!user) throw new Error('Usuário não autenticado');
+  const { data, error } = await supabaseClientInstance
+    .from('comentarios')
+    .insert({
+      entrada_id: entradaId,
+      nicho_id:   nichoId,
+      user_id:    user.id,
+      parent_id:  parentId,
+      conteudo:   conteudo.trim()
+    })
+    .select('*, autor:users(nickname)')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Exclui um comentário (e suas respostas via CASCADE).
+ * @param {string} comentarioId
+ * @returns {Promise<void>}
+ */
+async function excluirComentario(comentarioId) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  const { error } = await supabaseClientInstance
+    .from('comentarios')
+    .delete()
+    .eq('id', comentarioId);
+  if (error) throw error;
+}
+
+/**
+ * Inicia uma subscrição Realtime para comentários de uma entrada.
+ * Filtra por entrada_id para receber apenas eventos desta entrada.
+ * Requer REPLICA IDENTITY FULL na tabela para que payloads de DELETE
+ * incluam parent_id e user_id além do PK.
+ * @param {string} entradaId
+ * @param {Function} onComentario - Chamado com o payload de cada evento
+ * @returns {RealtimeChannel}
+ */
+function iniciarRealtimeComentarios(entradaId, onComentario) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return null;
+
+  const canal = supabaseClientInstance
+    .channel(`comentarios-entrada-${entradaId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'comentarios', filter: `entrada_id=eq.${entradaId}` },
+      (payload) => onComentario && onComentario(payload)
+    )
+    .subscribe((status) => {
+      console.log('Realtime comentários status:', status);
+    });
+
+  return canal;
+}
+
 /**
  * Para e remove um canal Realtime.
  * @param {RealtimeChannel} canal
@@ -1481,5 +1586,12 @@ window.WikiSupabase = {
   buscarNotificacoes,
   contarNotificacoesNaoLidas,
   marcarNotificacaoComoLida,
-  marcarTodasNotificacoesComoLidas
+  marcarTodasNotificacoesComoLidas,
+
+  // Funções de comentários
+  buscarComentariosPorEntrada,
+  buscarRespostasPorComentario,
+  criarComentario,
+  excluirComentario,
+  iniciarRealtimeComentarios
 };

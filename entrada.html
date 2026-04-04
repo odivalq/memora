@@ -124,6 +124,12 @@
                     </svg>
                     Download PDF
                   </button>
+                  <button id="btnAbrirComentarios" class="btn btn-secondary btn-sm hidden" title="Comentários">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 0 2 2z"></path>
+                    </svg>
+                    Comentários
+                  </button>
                   <button id="btnExcluir" class="btn btn-danger btn-sm">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="3 6 5 6 21 6"></polyline>
@@ -154,6 +160,67 @@
     </div>
   </main>
 
+  <!-- Painel de Comentários (desktop: sidebar fixa; mobile: fullscreen via CSS) -->
+  <div id="comentariosSidebar" class="comentarios-sidebar">
+
+    <div class="comentarios-sidebar-header">
+      <span class="comentarios-sidebar-titulo">Comentários</span>
+      <button id="btnFecharSidebar" class="comentarios-fechar-btn" title="Fechar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Vista: lista de comentários raiz -->
+    <div id="comentariosLista">
+      <div id="comentariosListaItems" class="comentarios-lista-items">
+        <!-- cards injetados via JS -->
+      </div>
+      <div id="comentariosVazio" class="comentarios-vazio hidden">
+        <p>Nenhum comentário ainda.<br>Seja o primeiro!</p>
+      </div>
+      <div id="comentariosLoading" class="comentarios-loading">
+        <div class="loading"></div>
+      </div>
+      <button id="btnNovoComentario" class="btn btn-primary btn-sm comentarios-novo-btn hidden">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Novo comentário
+      </button>
+    </div>
+
+    <!-- Vista: thread de um comentário + suas respostas -->
+    <div id="comentarioThread" class="hidden">
+      <button id="btnVoltarLista" class="comentarios-voltar-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"></path>
+        </svg>
+        Voltar
+      </button>
+      <div id="threadComentarioPrincipal" class="thread-principal">
+        <!-- comentário raiz injetado via JS -->
+      </div>
+      <div id="threadRespostas" class="thread-respostas">
+        <!-- respostas injetadas via JS -->
+      </div>
+      <div id="threadVazio" class="comentarios-vazio hidden">
+        <p>Nenhuma resposta ainda.</p>
+      </div>
+      <button id="btnNovaResposta" class="btn btn-primary btn-sm comentarios-novo-btn hidden">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Responder
+      </button>
+    </div>
+
+  </div>
+
   <!-- Footer -->
   <footer class="footer">
     <div class="container">
@@ -172,6 +239,42 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal: Novo Comentário / Nova Resposta -->
+  <div class="modal-overlay" id="novoComentarioOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-titulo" id="novoComentarioTitulo">Novo comentário</h3>
+        <button class="modal-close" id="btnFecharModalComentario" title="Fechar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <textarea
+            id="novoComentarioTexto"
+            class="form-control"
+            rows="5"
+            placeholder="Escreva seu comentário..."
+            maxlength="2000"
+          ></textarea>
+          <span class="form-hint">
+            <span id="comentarioCharCount">0</span>/2000 caracteres
+          </span>
+        </div>
+      </div>
+      <div class="modal-acoes">
+        <button class="btn btn-secondary" id="btnCancelarComentario">Cancelar</button>
+        <button class="btn btn-primary" id="btnSalvarComentario">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
 
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>

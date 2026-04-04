@@ -152,18 +152,30 @@ CREATE POLICY "Authenticated users can search other users" ON users
 -- SEÇÃO 8: ATUALIZAR POLÍTICAS RLS — NICHOS
 -- Membros agora enxergam nichos compartilhados com eles.
 -- UPDATE e DELETE permanecem exclusivos do dono.
+--
+-- IMPORTANTE: a política de nichos NÃO pode usar um EXISTS
+-- direto em nicho_membros, pois a política de nicho_membros
+-- faz o caminho inverso (nichos → nicho_membros → nichos),
+-- causando recursão infinita (código 42P17).
+-- A solução é uma função SECURITY DEFINER que acessa
+-- nicho_membros sem passar por RLS, quebrando o ciclo.
 -- =====================================================
+
+-- Helper: verifica membresia diretamente, sem RLS (quebra a dependência circular)
+CREATE OR REPLACE FUNCTION _check_nicho_membership(p_nicho_id TEXT, p_user_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM nicho_membros
+    WHERE nicho_id = p_nicho_id AND user_id = p_user_id
+  );
+$$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
 
 DROP POLICY IF EXISTS "Users can view own nichos" ON nichos;
 DROP POLICY IF EXISTS "Users can view own nichos and shared" ON nichos;
 CREATE POLICY "Users can view own nichos and shared" ON nichos
   FOR SELECT USING (
     user_id = auth.uid()
-    OR EXISTS (
-      SELECT 1 FROM nicho_membros
-      WHERE nicho_membros.nicho_id = nichos.id
-      AND nicho_membros.user_id = auth.uid()
-    )
+    OR _check_nicho_membership(id, auth.uid())
   );
 
 

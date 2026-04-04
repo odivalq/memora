@@ -2022,3 +2022,290 @@ button:disabled {
 .toast.saindo {
   animation: toastSair 0.25s ease forwards;
 }
+
+/* ============================================
+   PAINEL DE COMENTÁRIOS
+   ============================================ */
+
+/* ── Estrutura do painel ── */
+.comentarios-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 360px;
+  height: 100vh;
+  background: white;
+  border-left: 1px solid var(--cor-borda);
+  box-shadow: -4px 0 20px rgba(0,0,0,0.12);
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  overflow: hidden;
+}
+
+.comentarios-sidebar.aberto {
+  transform: translateX(0);
+}
+
+/* ── Cabeçalho do painel ── */
+.comentarios-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--cor-borda);
+  flex-shrink: 0;
+}
+
+.comentarios-sidebar-titulo {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+.comentarios-fechar-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--cor-texto-claro);
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: var(--transicao);
+}
+
+.comentarios-fechar-btn:hover {
+  background: var(--cor-secundaria);
+  color: var(--cor-texto);
+}
+
+/* ── Vistas internas (lista e thread) ── */
+#comentariosLista,
+#comentarioThread {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0; /* necessário para overflow funcionar em flex */
+}
+
+/* ── Botão de ação fixo ao fundo da vista ── */
+.comentarios-novo-btn {
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+  justify-content: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 14px;
+  padding-bottom: 6px;
+  background: white;
+  flex-shrink: 0;
+}
+
+/* ── Estado vazio ── */
+.comentarios-vazio {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--cor-texto-claro);
+  font-size: 0.9rem;
+  padding: 24px;
+  line-height: 1.6;
+}
+
+/* ── Loading ── */
+.comentarios-loading {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.comentarios-loading .loading {
+  border-color: rgba(0,0,0,0.1);
+  border-top-color: var(--cor-primaria);
+}
+
+/* ── Cards de comentário ── */
+.comentario-card {
+  background: var(--cor-secundaria);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-borda);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: var(--transicao);
+  flex-shrink: 0;
+}
+
+.comentario-card:hover {
+  border-color: var(--cor-primaria);
+  box-shadow: 0 2px 8px rgba(40,201,142,0.12);
+}
+
+.comentario-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.comentario-autor-data {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.comentario-autor {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--cor-texto);
+}
+
+.comentario-data {
+  font-size: 0.76rem;
+  color: var(--cor-texto-claro);
+}
+
+.comentario-deletar-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--cor-texto-claro);
+  padding: 2px 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: var(--transicao);
+  opacity: 0;
+  flex-shrink: 0;
+}
+
+.comentario-card:hover .comentario-deletar-btn {
+  opacity: 1;
+}
+
+.comentario-deletar-btn:hover {
+  background: #fde8e8;
+  color: var(--cor-erro);
+}
+
+.comentario-corpo {
+  font-size: 0.92rem;
+  color: var(--cor-texto);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.comentario-rodape {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.comentario-respostas-badge {
+  font-size: 0.78rem;
+  color: var(--cor-texto-claro);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Vista de thread ── */
+
+/* Comentário raiz na thread: não clicável, destaque com borda */
+.comentario-card.thread-root {
+  cursor: default;
+  border-color: var(--cor-primaria);
+  background: white;
+}
+
+.comentario-card.thread-root:hover {
+  box-shadow: none;
+}
+
+/* Botão Voltar */
+.comentarios-voltar-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--cor-primaria);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transicao);
+  flex-shrink: 0;
+}
+
+.comentarios-voltar-btn:hover {
+  color: var(--cor-primaria-escura);
+}
+
+/* Respostas: separadas do comentário raiz */
+.thread-respostas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--cor-borda);
+}
+
+/* Respostas têm recuo visual leve e não são clicáveis */
+.thread-respostas .comentario-card {
+  cursor: default;
+  margin-left: 12px;
+  border-left: 3px solid var(--cor-primaria);
+}
+
+.thread-respostas .comentario-card:hover {
+  border-color: var(--cor-borda);
+  border-left-color: var(--cor-primaria);
+  box-shadow: none;
+}
+
+/* ── Modal de novo comentário / resposta ── */
+.modal-body {
+  padding: 4px 0 16px;
+}
+
+.form-hint {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--cor-texto-claro);
+  text-align: right;
+  margin-top: 4px;
+}
+
+/* ── Mobile: painel ocupa toda a tela ── */
+@media (max-width: 768px) {
+  .comentarios-sidebar {
+    width: 100%;
+    border-left: none;
+    box-shadow: none;
+  }
+}
+
+/* ── Esconder no PDF ── */
+@media print {
+  .comentarios-sidebar { display: none !important; }
+}
+
+/* Empurra o toast para a esquerda do painel quando ele está aberto */
+@media (min-width: 769px) {
+  body.comentarios-abertos .toast-container {
+    right: calc(360px + 24px);
+    transition: right 0.3s ease;
+  }
+}

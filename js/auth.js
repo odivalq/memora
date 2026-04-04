@@ -148,8 +148,10 @@ async function verificarAutenticacao() {
           await client.from('users').insert({
             id: usuarioAtual.id,
             email: usuarioAtual.email,
-            nickname: usuarioAtual.email, // usar email como nickname temporário
-            email_verified: false
+            // Usa o nickname salvo nos metadados do signup; fallback para a
+            // parte local do email se o trigger não tiver criado a linha ainda.
+            nickname: usuarioAtual.user_metadata?.nickname
+                   || usuarioAtual.email.split('@')[0]
           });
           console.log('Registro criado na tabela users');
         }
@@ -219,10 +221,13 @@ async function criarConta(email, senha, nickname) {
 
   try {
     // 1. Criar usuário no Supabase Auth
+    // O nickname é passado em options.data (raw_user_meta_data) para que o
+    // trigger handle_new_user() o leia e insira na tabela public.users.
     const { data: { user }, error: signupError } = await client.auth.signUp({
       email: email,
       password: senha,
       options: {
+        data: { nickname },
         emailRedirectTo: `${window.location.origin}/verify-email.html`
       }
     });
