@@ -194,6 +194,13 @@ function renderizarEntrada() {
     data.textContent = `Publicado em ${dataFormatada}`;
   }
 
+  // Exibir autor original
+  const autorEl = document.getElementById('entradaAutor');
+  if (autorEl) {
+    const nick = estado.entrada.criador?.nickname;
+    autorEl.textContent = nick ? `por ${nick}` : '';
+  }
+
   // Atualizar conteúdo
   const body = document.getElementById('entradaBody');
   if (body) {
@@ -250,16 +257,31 @@ function configurarBotoesAcao() {
     });
   }
 
-  // Botão de excluir
+  // Botão de excluir (só para o criador da entrada)
   const btnExcluir = document.getElementById('btnExcluir');
   if (btnExcluir) {
+    if (estado.entrada.user_id !== estado.usuario?.id) {
+      btnExcluir.classList.add('hidden');
+    }
     btnExcluir.addEventListener('click', () => {
       abrirModalExcluir();
     });
   }
 
+  // Botão de ocultar (para entradas de outros usuários)
+  const btnOcultar = document.getElementById('btnOcultar');
+  if (btnOcultar) {
+    if (estado.entrada.user_id !== estado.usuario?.id) {
+      btnOcultar.classList.remove('hidden');
+    }
+    btnOcultar.addEventListener('click', () => {
+      abrirModalOcultar();
+    });
+  }
+
   // Modal de exclusão
   configurarModalExcluir();
+  configurarModalOcultar();
 }
 
 // ============================================
@@ -317,6 +339,38 @@ function configurarModalExcluir() {
   // Confirmar exclusão
   btnConfirmar.addEventListener('click', async () => {
     await excluirEntrada();
+  });
+}
+
+function abrirModalOcultar() {
+  const modal = document.getElementById('modalOcultar');
+  if (modal) modal.style.display = 'flex';
+}
+
+function configurarModalOcultar() {
+  const modal = document.getElementById('modalOcultar');
+  const btnCancelar = document.getElementById('btnCancelarOcultar');
+  const btnConfirmar = document.getElementById('btnConfirmarOcultar');
+
+  if (!modal || !btnCancelar || !btnConfirmar) return;
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.style.display = 'none';
+  });
+
+  btnCancelar.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  btnConfirmar.addEventListener('click', async () => {
+    btnConfirmar.disabled = true;
+    const ok = await WikiSupabase.ocultarEntradaParaMim(estado.entrada.id);
+    if (ok) {
+      window.location.href = `index.html?nicho=${estado.nichoId}`;
+    } else {
+      btnConfirmar.disabled = false;
+      modal.style.display = 'none';
+    }
   });
 }
 

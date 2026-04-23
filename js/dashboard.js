@@ -133,7 +133,7 @@ async function renderizarNichos() {
 
   grid.innerHTML = nichosComStats.map(nicho => {
     const badgeCompartilhado = nicho.isShared
-      ? `<span class="badge-compartilhado-card">&#128279; Compartilhado</span>`
+      ? `<span class="badge-compartilhado-card">&#128279; Compartilhado por ${escapeHtml(nicho.criadorNick || 'alguém')}</span>`
       : '';
 
     return `
@@ -174,7 +174,12 @@ async function renderizarNichos() {
           <span>🗑️</span>
           <span>Excluir</span>
         </button>
-        ` : ''}
+        ` : `
+        <button class="nicho-btn nicho-btn-danger" onclick="event.stopPropagation(); abrirModalSair('${nicho.id}')">
+          <span>🚪</span>
+          <span>Sair do nicho</span>
+        </button>
+        `}
       </div>
     </div>
   `;
@@ -512,6 +517,40 @@ async function salvarNicho(nichoId = null) {
   }
 }
 
+function abrirModalSair(nichoId) {
+  const modal = document.getElementById('sairModalOverlay');
+  const confirmBtn = document.getElementById('sairModalConfirmBtn');
+  if (!modal || !confirmBtn) return;
+  confirmBtn.onclick = () => sairDoNichoConfirmado(nichoId);
+  modal.classList.add('active');
+}
+
+async function sairDoNichoConfirmado(nichoId) {
+  const modal = document.getElementById('sairModalOverlay');
+  const confirmBtn = document.getElementById('sairModalConfirmBtn');
+  const btnText = document.getElementById('sairModalText');
+  const spinner = document.getElementById('sairModalLoading');
+
+  confirmBtn.disabled = true;
+  if (btnText) btnText.style.display = 'none';
+  if (spinner) spinner.style.display = 'block';
+
+  try {
+    const ok = await WikiSupabase.sairDoNicho(nichoId);
+    if (!ok) throw new Error('Erro ao sair do nicho.');
+    modal.classList.remove('active');
+    await carregarDashboard();
+    mostrarToast('Você saiu do nicho com sucesso.', 'sucesso');
+  } catch (error) {
+    console.error('Erro ao sair do nicho:', error);
+    mostrarToast(error.message || 'Erro ao sair do nicho. Tente novamente.', 'erro');
+  } finally {
+    confirmBtn.disabled = false;
+    if (btnText) btnText.style.display = 'inline';
+    if (spinner) spinner.style.display = 'none';
+  }
+}
+
 async function excluirNicho(nichoId) {
   const modal = document.getElementById('deleteModalOverlay');
   const deleteModalConfirmBtn = document.getElementById('deleteModalConfirmBtn');
@@ -634,6 +673,15 @@ function configurarEventListeners() {
     document.getElementById('deleteModalOverlay').classList.remove('active');
   });
 
+  // Modal de sair do nicho
+  document.getElementById('sairModalCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('sairModalOverlay').classList.remove('active');
+  });
+
+  document.getElementById('sairModalCancelBtn')?.addEventListener('click', () => {
+    document.getElementById('sairModalOverlay').classList.remove('active');
+  });
+
   // Seletor de ícones
   document.querySelectorAll('.icon-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -705,6 +753,13 @@ function configurarEventListeners() {
     if (deleteModal && deleteModal.classList.contains('active')) {
       if (!deleteModal.querySelector('.modal').contains(e.target)) {
         deleteModal.classList.remove('active');
+      }
+    }
+
+    const sairModal = document.getElementById('sairModalOverlay');
+    if (sairModal && sairModal.classList.contains('active')) {
+      if (!sairModal.querySelector('.modal').contains(e.target)) {
+        sairModal.classList.remove('active');
       }
     }
   });
