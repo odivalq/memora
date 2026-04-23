@@ -237,7 +237,9 @@ async function renderizarCategorias() {
   const grid = document.getElementById('categoriasGrid');
   if (!grid) return;
 
-  if (estado.categorias.length === 0) {
+  const entradasSemCat = estado.entradas.filter(e => !e.categoria_id);
+
+  if (estado.categorias.length === 0 && entradasSemCat.length === 0) {
     grid.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
         <div style="font-size: 3rem; margin-bottom: 15px;">📂</div>
@@ -249,16 +251,14 @@ async function renderizarCategorias() {
     return;
   }
 
-  grid.innerHTML = estado.categorias.map(cat => {
+  const cardCategoria = (cat) => {
     const entradasCat = estado.entradas.filter(e => e.categoria_id === cat.id);
     const entradasHtml = entradasCat.slice(0, 5).map(e => `
       <li><a href="entrada.html?id=${e.id}&nicho=${estado.nichoId}">${e.titulo}</a></li>
     `).join('');
-    
-    const maisEntradas = entradasCat.length > 5 
-      ? `<li style="color: var(--cor-texto-claro); font-size: 0.85rem; padding: 6px 0;">+ ${entradasCat.length - 5} mais...</li>` 
+    const maisEntradas = entradasCat.length > 5
+      ? `<li style="color: var(--cor-texto-claro); font-size: 0.85rem; padding: 6px 0;">+ ${entradasCat.length - 5} mais...</li>`
       : '';
-
     return `
       <div class="categoria-card">
         <div class="categoria-header">
@@ -276,7 +276,37 @@ async function renderizarCategorias() {
         </ul>
       </div>
     `;
-  }).join('');
+  };
+
+  const cardSemCategoria = () => {
+    const entradasHtml = entradasSemCat.slice(0, 5).map(e => `
+      <li><a href="entrada.html?id=${e.id}&nicho=${estado.nichoId}">${e.titulo}</a></li>
+    `).join('');
+    const maisEntradas = entradasSemCat.length > 5
+      ? `<li style="color: var(--cor-texto-claro); font-size: 0.85rem; padding: 6px 0;">+ ${entradasSemCat.length - 5} mais...</li>`
+      : '';
+    return `
+      <div class="categoria-card">
+        <div class="categoria-header">
+          <div class="categoria-icon" style="background: #6b728020; color: #6b7280;">
+            📁
+          </div>
+          <div>
+            <div class="categoria-titulo">Sem categoria</div>
+            <div class="categoria-contador">${entradasSemCat.length} entrada(s)</div>
+          </div>
+        </div>
+        <ul class="entradas-lista">
+          ${entradasHtml}
+          ${maisEntradas}
+        </ul>
+      </div>
+    `;
+  };
+
+  grid.innerHTML =
+    estado.categorias.map(cat => cardCategoria(cat)).join('') +
+    (entradasSemCat.length > 0 ? cardSemCategoria() : '');
   
   // Remover classe hidden da seção
   const categoriesSection = document.getElementById('categoriesSection');
