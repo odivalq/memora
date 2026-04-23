@@ -274,7 +274,7 @@ async function buscarEntradaPorId(id) {
   try {
     const { data, error } = await supabaseClientInstance
       .from('entradas')
-      .select('*')
+      .select('*, criador:users(nickname)')
       .eq('id', id)
       .single();
     
@@ -556,7 +556,7 @@ async function buscarNichos() {
     // Não filtramos por user_id aqui — a política cuida disso.
     const { data, error } = await supabaseClientInstance
       .from('nichos')
-      .select('*')
+      .select('*, criador:users(nickname)')
       .order('nome');
 
     if (error) {
@@ -572,7 +572,8 @@ async function buscarNichos() {
     const nichos = (data || []).map(n => ({
       ...n,
       isOwner: n.user_id === userId,
-      isShared: n.user_id !== userId
+      isShared: n.user_id !== userId,
+      criadorNick: n.criador?.nickname || null
     }));
 
     console.log('Nichos carregados com sucesso:', nichos.length, 'itens');
@@ -859,19 +860,60 @@ async function excluirCategoriaDeNicho(nichoId, categoriaId) {
 async function buscarEntradasPorNicho(nichoId) {
   if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
   if (!supabaseClientInstance) return [];
-  
+
   try {
-    const { data, error } = await supabaseClientInstance
+    const userId = await obterUsuarioIdAtual();
+
+    // Buscar ids ocultados pelo usuário para este nicho
+    let ocultadosIds = [];
+    if (userId) {
+      const { data: ocult } = await supabaseClientInstance
+        .from('entrada_ocultacoes')
+        .select('entrada_id')
+        .eq('user_id', userId);
+      ocultadosIds = (ocult || []).map(o => o.entrada_id);
+    }
+
+    let query = supabaseClientInstance
       .from('entradas')
       .select('*')
       .eq('nicho_id', nichoId)
       .order('titulo');
-    
+
+    if (ocultadosIds.length > 0) {
+      query = query.not('id', 'in', `(${ocultadosIds.join(',')})`);
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
     return data || [];
   } catch (erro) {
     console.error('Erro ao buscar entradas do nicho:', erro);
     return [];
+  }
+}
+
+/**
+ * Oculta uma entrada para o usuário atual.
+ * A entrada continua visível para todos os demais membros do nicho.
+ */
+async function ocultarEntradaParaMim(entradaId) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return false;
+
+  try {
+    const userId = await obterUsuarioIdAtual();
+    if (!userId) throw new Error('Usuário não autenticado');
+
+    const { error } = await supabaseClientInstance
+      .from('entrada_ocultacoes')
+      .insert({ user_id: userId, entrada_id: entradaId });
+
+    if (error) throw error;
+    return true;
+  } catch (erro) {
+    console.error('Erro ao ocultar entrada:', erro);
+    return false;
   }
 }
 
@@ -1160,6 +1202,32 @@ async function responderConvite(conviteId, aceitar) {
   } catch (erro) {
     console.error('Erro ao responder convite:', erro);
     throw erro;
+  }
+}
+
+/**
+ * Remove o usuário atual da lista de membros de um nicho compartilhado.
+ * Não afeta o nicho nem seus dados para os demais membros.
+ */
+async function sairDoNicho(nichoId) {
+  if (!supabaseClientInstance) supabaseClientInstance = inicializarSupabase();
+  if (!supabaseClientInstance) return false;
+
+  try {
+    const userId = await obterUsuarioIdAtual();
+    if (!userId) throw new Error('Usuário não autenticado');
+
+    const { error } = await supabaseClientInstance
+      .from('nicho_membros')
+      .delete()
+      .eq('nicho_id', nichoId)
+      .eq('user_id', userId);
+
+    if (error) throw error;
+    return true;
+  } catch (erro) {
+    console.error('Erro ao sair do nicho:', erro);
+    return false;
   }
 }
 
@@ -1566,6 +1634,7 @@ window.WikiSupabase = {
   criarEntradaEmNicho,
   atualizarEntradaEmNicho,
   excluirEntradaDeNicho,
+  excluirEntradaEmNicho: excluirEntradaDeNicho,
   
   // Funções de suporte
   obterEstatisticasNicho,
@@ -1574,6 +1643,8 @@ window.WikiSupabase = {
   // Funções de compartilhamento
   buscarPerfisPorIds,
   verificarSeEhDono,
+  sairDoNicho,
+  ocultarEntradaParaMim,
   // Funções de realtime
   iniciarRealtimeNicho,
   iniciarRealtimeNotificacoes,

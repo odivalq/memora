@@ -108,6 +108,7 @@
               <div class="entrada-meta">
                 <span class="entrada-categoria" id="entradaCategoria"></span>
                 <span class="entrada-data" id="entradaData"></span>
+                <span class="entrada-autor" id="entradaAutor"></span>
                 <div class="entrada-acoes">
                   <a href="#" id="btnEditar" class="btn btn-secondary btn-sm">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -129,6 +130,9 @@
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 0 2 2z"></path>
                     </svg>
                     Comentários
+                  </button>
+                  <button id="btnOcultar" class="btn btn-secondary btn-sm hidden">
+                    🚫 Ocultar para mim
                   </button>
                   <button id="btnExcluir" class="btn btn-danger btn-sm">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -236,6 +240,18 @@
       <p>Memora - Sua enciclopédia colaborativa.</p>
     </div>
   </footer>
+
+  <!-- Modal de Confirmação de Ocultação -->
+  <div class="modal-overlay" id="modalOcultar">
+    <div class="modal">
+      <h3 class="modal-titulo">🚫 Ocultar entrada</h3>
+      <p class="modal-texto">Esta entrada desaparecerá do seu dashboard. O conteúdo <strong>não será apagado</strong> para os demais colaboradores.</p>
+      <div class="modal-acoes">
+        <button class="btn btn-secondary" id="btnCancelarOcultar">Cancelar</button>
+        <button class="btn btn-danger" id="btnConfirmarOcultar">Sim, ocultar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal de Confirmação -->
   <div class="modal-overlay" id="modalExcluir">
