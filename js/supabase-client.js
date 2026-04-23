@@ -274,11 +274,18 @@ async function buscarEntradaPorId(id) {
   try {
     const { data, error } = await supabaseClientInstance
       .from('entradas')
-      .select('*, criador:users(nickname)')
+      .select('*')
       .eq('id', id)
       .single();
-    
+
     if (error) throw error;
+
+    // Resolver nickname do criador da entrada
+    if (data?.user_id) {
+      const perfis = await buscarPerfisPorIds([data.user_id]);
+      data.criador = perfis[0] || null;
+    }
+
     return data;
   } catch (erro) {
     console.error('Erro ao buscar entrada:', erro);
@@ -556,7 +563,7 @@ async function buscarNichos() {
     // Não filtramos por user_id aqui — a política cuida disso.
     const { data, error } = await supabaseClientInstance
       .from('nichos')
-      .select('*, criador:users(nickname)')
+      .select('*')
       .order('nome');
 
     if (error) {
@@ -573,8 +580,20 @@ async function buscarNichos() {
       ...n,
       isOwner: n.user_id === userId,
       isShared: n.user_id !== userId,
-      criadorNick: n.criador?.nickname || null
+      criadorNick: null
     }));
+
+    // Resolver nicknames dos criadores dos nichos compartilhados
+    const idsCreadores = [...new Set(
+      nichos.filter(n => n.isShared).map(n => n.user_id)
+    )];
+    if (idsCreadores.length > 0) {
+      const perfis = await buscarPerfisPorIds(idsCreadores);
+      const perfilMap = Object.fromEntries(perfis.map(p => [p.id, p.nickname]));
+      nichos.forEach(n => {
+        if (n.isShared) n.criadorNick = perfilMap[n.user_id] || null;
+      });
+    }
 
     console.log('Nichos carregados com sucesso:', nichos.length, 'itens');
     return nichos;
