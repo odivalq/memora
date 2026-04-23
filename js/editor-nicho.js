@@ -148,20 +148,18 @@ function renderizarCategorias() {
   const selectCategoria = document.getElementById('categoria');
   if (!selectCategoria) return;
 
-  // Limpar opções existentes (exceto a primeira)
-  selectCategoria.innerHTML = '<option value="">Selecione uma categoria...</option>';
+  selectCategoria.innerHTML =
+    '<option value="">Selecione uma categoria...</option>' +
+    '<option value="sem-categoria">📁 Sem categoria</option>';
 
-  if (estado.categorias.length === 0) {
-    selectCategoria.innerHTML += '<option value="nova">Criar nova categoria</option>';
-  } else {
-    estado.categorias.forEach(categoria => {
-      const option = document.createElement('option');
-      option.value = categoria.id;
-      option.textContent = categoria.nome;
-      selectCategoria.appendChild(option);
-    });
-    selectCategoria.innerHTML += '<option value="nova">Criar nova categoria</option>';
-  }
+  estado.categorias.forEach(categoria => {
+    const option = document.createElement('option');
+    option.value = categoria.id;
+    option.textContent = categoria.nome;
+    selectCategoria.appendChild(option);
+  });
+
+  selectCategoria.innerHTML += '<option value="nova">Criar nova categoria</option>';
 }
 
 /**
@@ -169,7 +167,7 @@ function renderizarCategorias() {
  */
 function preencherFormulario(entrada) {
   document.getElementById('titulo').value = entrada.titulo;
-  document.getElementById('categoria').value = entrada.categoria_id;
+  document.getElementById('categoria').value = entrada.categoria_id ?? 'sem-categoria';
   document.getElementById('conteudo').value = entrada.conteudo;
   
   // Atualizar preview
@@ -225,17 +223,12 @@ async function salvarEntrada() {
     return;
   }
 
-  if (!categoriaId) {
-    mostrarErro('Categoria é obrigatória.');
-    return;
-  }
-
   if (!conteudo) {
     mostrarErro('Conteúdo é obrigatório.');
     return;
   }
 
-  let categoriaFinalId = categoriaId;
+  const categoriaFinalId = categoriaId === 'sem-categoria' || categoriaId === '' ? null : categoriaId;
 
   // Se for criar nova categoria
   if (categoriaId === 'nova') {
