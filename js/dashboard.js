@@ -270,6 +270,17 @@ function renderizarNotificacoes(notifs) {
       conteudo = `<div class="notif-msg">Seu acesso ao nicho <strong>${escapeHtml(p.nicho_nome || '')}</strong> foi removido. Uma cópia independente foi salva no seu dashboard.</div>`;
     } else if (n.tipo === 'ownership_recebida') {
       conteudo = `<div class="notif-msg">Você agora é o dono do nicho <strong>${escapeHtml(p.nicho_nome || '')}</strong>.</div>`;
+    } else if (n.tipo === 'membro_saiu') {
+      conteudo = `<div class="notif-msg"><strong>${escapeHtml(p.user_email_saiu || '')}</strong> saiu do nicho <strong>${escapeHtml(p.nicho_nome || '')}</strong>.</div>`;
+    } else if (n.tipo === 'nova_entrada') {
+      const href = `entrada.html?id=${encodeURIComponent(p.entrada_id || '')}&nicho=${encodeURIComponent(p.nicho_id || '')}`;
+      conteudo = `<div class="notif-msg">Nova entrada <a href="${href}"><strong>${escapeHtml(p.entrada_titulo || '')}</strong></a> em <strong>${escapeHtml(p.nicho_nome || '')}</strong>.</div>`;
+    } else if (n.tipo === 'entrada_editada') {
+      const href = `entrada.html?id=${encodeURIComponent(p.entrada_id || '')}&nicho=${encodeURIComponent(p.nicho_id || '')}`;
+      conteudo = `<div class="notif-msg">A entrada <a href="${href}"><strong>${escapeHtml(p.entrada_titulo || '')}</strong></a> foi editada em <strong>${escapeHtml(p.nicho_nome || '')}</strong>.</div>`;
+    } else if (n.tipo === 'novo_comentario') {
+      const href = `entrada.html?id=${encodeURIComponent(p.entrada_id || '')}&nicho=${encodeURIComponent(p.nicho_id || '')}`;
+      conteudo = `<div class="notif-msg">Novo comentário em <a href="${href}"><strong>${escapeHtml(p.entrada_titulo || '')}</strong></a> — <em>&ldquo;${escapeHtml(p.preview || '')}${p.preview && p.preview.length >= 120 ? '…' : ''}&rdquo;</em></div>`;
     } else {
       conteudo = `<div class="notif-msg">${escapeHtml(JSON.stringify(p))}</div>`;
     }
@@ -352,6 +363,14 @@ function iniciarRealtimeNotificacoes() {
       mensagem = `Seu acesso ao nicho "${p.nicho_nome || ''}" foi removido. Uma cópia foi salva no seu dashboard.`;
     } else if (notif.tipo === 'ownership_recebida') {
       mensagem = `Você agora é o dono do nicho "${p.nicho_nome || ''}".`;
+    } else if (notif.tipo === 'membro_saiu') {
+      mensagem = `${p.user_email_saiu || 'Um membro'} saiu do nicho "${p.nicho_nome || ''}".`;
+    } else if (notif.tipo === 'nova_entrada') {
+      mensagem = `Nova entrada "${p.entrada_titulo || ''}" em "${p.nicho_nome || ''}".`;
+    } else if (notif.tipo === 'entrada_editada') {
+      mensagem = `A entrada "${p.entrada_titulo || ''}" foi editada em "${p.nicho_nome || ''}".`;
+    } else if (notif.tipo === 'novo_comentario') {
+      mensagem = `Novo comentário em "${p.entrada_titulo || ''}" (${p.nicho_nome || ''}).`;
     }
 
     mostrarToast(mensagem, 'info');

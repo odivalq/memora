@@ -1337,6 +1337,7 @@ async function buscarNotificacoes(apenasNaoLidas = false) {
     let query = supabaseClientInstance
       .from('notificacoes')
       .select('*')
+      .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -1366,7 +1367,8 @@ async function contarNotificacoesNaoLidas() {
     const { count, error } = await supabaseClientInstance
       .from('notificacoes')
       .select('*', { count: 'exact', head: true })
-      .eq('lida', false);
+      .eq('lida', false)
+      .gt('expires_at', new Date().toISOString());
 
     if (error) throw error;
     return count || 0;
