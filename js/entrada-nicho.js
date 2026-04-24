@@ -310,7 +310,7 @@ function gerarPDF() {
 function abrirModalExcluir() {
   const modal = document.getElementById('modalExcluir');
   if (modal) {
-    modal.style.display = 'flex';
+    modal.classList.add('ativo');
   }
 }
 
@@ -327,13 +327,13 @@ function configurarModalExcluir() {
   // Fechar modal ao clicar fora
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
-      modal.style.display = 'none';
+      modal.classList.remove('ativo');
     }
   });
 
   // Cancelar exclusão
   btnCancelar.addEventListener('click', () => {
-    modal.style.display = 'none';
+    modal.classList.remove('ativo');
   });
 
   // Confirmar exclusão
@@ -344,7 +344,7 @@ function configurarModalExcluir() {
 
 function abrirModalOcultar() {
   const modal = document.getElementById('modalOcultar');
-  if (modal) modal.style.display = 'flex';
+  if (modal) modal.classList.add('ativo');
 }
 
 function configurarModalOcultar() {
@@ -355,11 +355,11 @@ function configurarModalOcultar() {
   if (!modal || !btnCancelar || !btnConfirmar) return;
 
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) modal.style.display = 'none';
+    if (e.target === modal) modal.classList.remove('ativo');
   });
 
   btnCancelar.addEventListener('click', () => {
-    modal.style.display = 'none';
+    modal.classList.remove('ativo');
   });
 
   btnConfirmar.addEventListener('click', async () => {
@@ -369,7 +369,7 @@ function configurarModalOcultar() {
       window.location.href = `index.html?nicho=${estado.nichoId}`;
     } else {
       btnConfirmar.disabled = false;
-      modal.style.display = 'none';
+      modal.classList.remove('ativo');
     }
   });
 }
@@ -384,7 +384,7 @@ async function excluirEntrada() {
   try {
     // Desabilitar botões
     if (btnExcluir) btnExcluir.disabled = true;
-    if (modal) modal.style.display = 'none';
+    if (modal) modal.classList.remove('ativo');
 
     // Excluir entrada
     const resultado = await WikiSupabase.excluirEntradaEmNicho(estado.nichoId, estado.entrada.id);
